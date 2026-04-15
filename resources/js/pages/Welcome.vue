@@ -20,7 +20,7 @@ const user = computed(() => page.props.auth.user);
 </script>
 
 <template>
-    <Head title="Albatal Colony" />
+    <Head title="Home" />
 
     <div class="min-h-screen bg-[#f6f1e7] text-[#241914]">
         <div class="absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(circle_at_top_left,_rgba(224,122,95,0.35),_transparent_35%),radial-gradient(circle_at_top_right,_rgba(42,157,143,0.28),_transparent_28%),linear-gradient(180deg,_#fff8ef_0%,_#f6f1e7_100%)]" />
@@ -28,7 +28,7 @@ const user = computed(() => page.props.auth.user);
         <header class="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-8">
             <div>
                 <p class="font-mono text-xs uppercase tracking-[0.35em] text-[#8d5b4c]">
-                    Albatal Colony
+                    Jp Con Colony
                 </p>
                 <h1 class="mt-2 font-serif text-2xl text-[#241914]">
                     Japanese Creator Marketplace

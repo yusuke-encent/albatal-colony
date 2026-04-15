@@ -68,7 +68,7 @@ const mainNavItems = computed<NavItem[]>(() => {
 
     if (user.value?.role === 'provider' || user.value?.role === 'admin') {
         items.push({
-            title: 'Provider Sales',
+            title: 'Creator Sales',
             href: '/provider/sales',
             icon: ShieldCheck,
         });

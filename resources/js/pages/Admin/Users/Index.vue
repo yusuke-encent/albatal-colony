@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import {
+    index as usersIndex,
+    store as storeManagedUser,
+    updateRole as updateManagedUserRole,
+} from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -32,17 +37,17 @@ const roleForm = useForm({
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Users',
-        href: '/admin/users',
+        href: usersIndex.url(),
     },
 ];
 
 function submitCreate(): void {
-    createForm.post('/admin/users');
+    createForm.post(storeManagedUser.url());
 }
 
 function updateRole(userId: number, role: string): void {
     roleForm.role = role;
-    roleForm.patch(`/admin/users/${userId}/role`);
+    roleForm.patch(updateManagedUserRole.url({ user: userId }));
 }
 
 function handleRoleChange(event: Event, userId: number): void {
@@ -81,7 +86,7 @@ function handleRoleChange(event: Event, userId: number): void {
                         class="rounded-2xl border border-input px-4 py-3 text-sm"
                     >
                         <option value="admin">admin</option>
-                        <option value="provider">provider</option>
+                        <option value="provider">creator</option>
                         <option value="customer">customer</option>
                     </select>
                     <input
@@ -139,7 +144,7 @@ function handleRoleChange(event: Event, userId: number): void {
                                         @change="handleRoleChange($event, user.id)"
                                     >
                                         <option value="admin">admin</option>
-                                        <option value="provider">provider</option>
+                                        <option value="provider">creator</option>
                                         <option value="customer">customer</option>
                                     </select>
                                 </td>

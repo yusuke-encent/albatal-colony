@@ -114,7 +114,7 @@ const heroImage = computed(
                         </div>
                         <div class="mt-6 space-y-3 text-sm text-[#5f453b]">
                             <p>SKU: {{ content.sku }}</p>
-                            <p>Provider: {{ content.provider.name }}</p>
+                            <p>Creator: {{ content.provider.name }}</p>
                             <p>Delivery file: {{ content.download_name }}</p>
                             <p>Format: {{ content.download_mime_type || 'application/octet-stream' }}</p>
                         </div>

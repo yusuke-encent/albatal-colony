@@ -66,7 +66,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <thead class="text-muted-foreground">
                             <tr>
                                 <th class="pb-3">Content</th>
-                                <th class="pb-3">Provider</th>
+                                <th class="pb-3">Creator</th>
                                 <th class="pb-3">Buyer</th>
                                 <th class="pb-3">Amount</th>
                                 <th class="pb-3">Purchased At</th>

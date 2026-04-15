@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
-defineProps<{
+const props = defineProps<{
     role: 'admin' | 'provider' | 'customer';
     stats: {
         contents: number;
@@ -30,6 +31,14 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/dashboard',
     },
 ];
+
+const roleLabel = computed(() => {
+    if (props.role === 'provider') {
+        return 'Creator';
+    }
+
+    return props.role.charAt(0).toUpperCase() + props.role.slice(1);
+});
 </script>
 
 <template>
@@ -39,7 +48,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         <div class="space-y-6 p-4 md:p-6">
             <section class="rounded-[2rem] bg-[linear-gradient(135deg,#17120f_0%,#513b31_50%,#d06d4f_100%)] p-8 text-white">
                 <p class="text-xs uppercase tracking-[0.35em] text-white/70">
-                    {{ role }}
+                    {{ roleLabel }}
                 </p>
                 <h1 class="mt-3 font-serif text-4xl">Marketplace dashboard</h1>
                 <p class="mt-3 max-w-2xl text-sm leading-7 text-white/80">
@@ -98,7 +107,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 SKU: {{ sale.content_sku || '-' }}
                             </p>
                             <p class="mt-1 text-sm text-[#6d4d40]">
-                                buyer: {{ sale.buyer_name }} / provider: {{ sale.provider_name }}
+                                buyer: {{ sale.buyer_name }} / creator: {{ sale.provider_name }}
                             </p>
                         </div>
                         <div class="text-right">

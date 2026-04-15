@@ -12,10 +12,38 @@ use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\MockGatewayController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\Provider\SaleController;
+use App\Models\User;
+use App\Support\UserRole;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/contents/{content}', [ContentController::class, 'show'])->name('contents.show');
+
+Route::get('/login/{role}', function (string $role) {
+    abort_unless(app()->environment('local'), 403);
+
+    if (is_numeric($role)) {
+        $user = User::query()->findOrFail((int) $role);
+    } else {
+        $user = match ($role) {
+            UserRole::Admin => User::query()->where('role', UserRole::Admin)->firstOrFail(),
+            UserRole::Provider => User::query()->where('role', UserRole::Provider)->latest('id')->firstOrFail(),
+            UserRole::Customer => User::query()->where('role', UserRole::Customer)->latest('id')->firstOrFail(),
+            default => abort(404),
+        };
+    }
+
+    if ($user->email_verified_at === null) {
+        $user->forceFill([
+            'email_verified_at' => now(),
+        ])->save();
+    }
+
+    Auth::login($user);
+
+    return to_route('dashboard');
+})->name('dev-login')->where('role', 'admin|provider|customer|\d+');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');

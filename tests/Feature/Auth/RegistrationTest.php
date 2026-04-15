@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\UserRole;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -16,6 +17,7 @@ test('new users can register', function () {
     $response = $this->post(route('register.store'), [
         'name' => 'Test User',
         'email' => 'test@example.com',
+        'role' => UserRole::Provider,
         'password' => 'password',
         'password_confirmation' => 'password',
     ]);

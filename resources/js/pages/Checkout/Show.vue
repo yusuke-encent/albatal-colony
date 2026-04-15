@@ -50,7 +50,7 @@ function submit(): void {
                     <div class="mt-6 rounded-[1.5rem] bg-[#fff8ef] p-5">
                         <h2 class="text-lg font-semibold">{{ content.title }}</h2>
                         <div class="mt-4 space-y-2 text-sm text-[#5f453b]">
-                            <p>Provider: {{ content.provider_name }}</p>
+                            <p>Creator: {{ content.provider_name }}</p>
                             <p>Genre: {{ content.genre_name }}</p>
                             <p>Download file: {{ content.download_name }}</p>
                         </div>

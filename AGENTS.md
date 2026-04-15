@@ -47,11 +47,25 @@ This project has domain-specific skills available. You MUST activate the relevan
 ## Verification Scripts
 
 - Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
+- If the host `php` version is incompatible with the project, run verification and formatting via Docker / Sail, for example `WWWUSER=$(id -u) WWWGROUP=$(id -g) docker compose run --rm laravel.test php artisan test --compact tests/Feature/Auth/RegistrationTest.php tests/Feature/Admin/UserManagementTest.php` and `WWWUSER=$(id -u) WWWGROUP=$(id -g) docker compose run --rm laravel.test vendor/bin/pint --dirty --format agent`.
 
 ## Application Structure & Architecture
 
 - Stick to existing directory structure; don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
+
+## System Roles & Responsibilities
+
+- The system currently has three user roles only: `admin`, `provider`, and `customer`. The source of truth is `App\Support\UserRole`; do not introduce alternate role names in code or docs.
+- `admin` is the highest-privilege role. Admins can access the admin panel, manage users, change user roles, manage contents, review sales, and see platform-wide dashboard metrics.
+- `provider` is the seller / content creator role. Providers can access the provider panel, see their own sales, and are valid assignees for managed content ownership, but they do not have admin-only user management privileges.
+- `customer` is the default buyer role for normal sign-up flows. Customers can access their own dashboard, library, checkout, and downloads, but cannot access admin or provider panels.
+- `admin` and `provider` are the only privileged roles. When privileged-role behavior is needed, align it with `UserRole::privileged()`.
+- Role checks should follow application conventions by using `App\Models\User` helpers such as `isAdmin()`, `isProvider()`, and `isCustomer()` instead of scattered raw string comparisons.
+- Panel access is enforced through Gates: `access-admin-panel` is admin-only, while `access-provider-panel` allows both admins and providers.
+- Dashboard behavior is role-specific: admins see platform-wide metrics, providers see metrics for their own contents and sales, and customers see their own purchases and library activity.
+- New self-registered users should remain `customer` by default unless a deliberate product decision changes that flow.
+- If role behavior changes, update all related surfaces together: `UserRole`, `User` helper methods, Gates, dashboard branching, form requests / policies, factories / seeders, and Pest feature tests.
 
 ## Frontend Bundling
 

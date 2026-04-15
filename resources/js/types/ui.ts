@@ -1,4 +1,4 @@
-export type Appearance = 'light' | 'dark' | 'system';
-export type ResolvedAppearance = 'light' | 'dark';
+export type Appearance = 'light';
+export type ResolvedAppearance = 'light';
 
 export type AppVariant = 'header' | 'sidebar';

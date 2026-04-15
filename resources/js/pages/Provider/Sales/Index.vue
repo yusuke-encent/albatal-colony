@@ -30,14 +30,14 @@ defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Provider Sales',
+        title: 'Creator Sales',
         href: '/provider/sales',
     },
 ];
 </script>
 
 <template>
-    <Head title="Provider Sales" />
+    <Head title="Creator Sales" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="space-y-6 p-4 md:p-6">
@@ -55,7 +55,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             </section>
 
             <section class="rounded-[1.75rem] bg-white p-6 shadow-sm">
-                <h1 class="text-2xl font-semibold">Provider sales</h1>
+                <h1 class="text-2xl font-semibold">Creator sales</h1>
                 <div class="mt-6 overflow-x-auto">
                     <table class="min-w-full text-left text-sm">
                         <thead class="text-muted-foreground">

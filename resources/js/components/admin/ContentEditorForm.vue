@@ -90,13 +90,13 @@ function submit(): void {
     <form class="space-y-8" @submit.prevent="submit">
         <div class="grid gap-6 lg:grid-cols-2">
             <div class="space-y-2">
-                <Label for="provider_id">Content Provider</Label>
+                <Label for="provider_id">Content Creator</Label>
                 <select
                     id="provider_id"
                     v-model="form.provider_id"
                     class="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm"
                 >
-                    <option value="">Select a provider</option>
+                    <option value="">Select a creator</option>
                     <option
                         v-for="provider in providers"
                         :key="provider.id"
