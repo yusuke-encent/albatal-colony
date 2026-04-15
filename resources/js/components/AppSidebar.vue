@@ -64,8 +64,8 @@ const mainNavItems = computed<NavItem[]>(() => {
                 icon: ShoppingBag,
             },
             {
-                title: 'Users',
-                href: '/admin/users',
+                title: 'Creators',
+                href: '/admin/creators',
                 icon: UsersRound,
             },
         );

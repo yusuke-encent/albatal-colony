@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CreatorManagementController;
 use App\Http\Controllers\Admin\ManagedContentController;
 use App\Http\Controllers\Admin\SaleReportController;
 use App\Http\Controllers\Admin\StockedContentController;
@@ -71,6 +72,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('stocked-contents/{stockedContent}', [StockedContentController::class, 'destroy'])->name('stocked-contents.destroy');
 
             Route::get('sales', SaleReportController::class)->name('sales.index');
+            Route::get('creators', [CreatorManagementController::class, 'index'])->name('creators.index');
+            Route::get('creators/create', [CreatorManagementController::class, 'create'])->name('creators.create');
+            Route::post('creators', [CreatorManagementController::class, 'store'])->name('creators.store');
+            Route::get('creators/{creator}/edit', [CreatorManagementController::class, 'edit'])->name('creators.edit');
+            Route::put('creators/{creator}', [CreatorManagementController::class, 'update'])->name('creators.update');
+            Route::delete('creators/{creator}', [CreatorManagementController::class, 'destroy'])->name('creators.destroy');
             Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
             Route::post('users', [UserManagementController::class, 'store'])->name('users.store');
             Route::patch('users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
