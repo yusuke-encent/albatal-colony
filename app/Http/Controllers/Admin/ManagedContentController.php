@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreContentRequest;
 use App\Http\Requests\Admin\UpdateContentRequest;
 use App\Models\Content;
 use App\Models\Genre;
+use App\Models\StockedContent;
 use App\Models\Tag;
 use App\Models\User;
 use App\Support\UserRole;
@@ -46,26 +47,33 @@ class ManagedContentController extends Controller
     {
         $this->authorize('create', Content::class);
 
-        $content = Content::create([
-            'provider_id' => $request->integer('provider_id'),
-            'genre_id' => $request->integer('genre_id'),
-            'title' => $request->string('title')->toString(),
-            'slug' => $this->makeUniqueSlug($request->string('title')->toString()),
-            'description' => $request->string('description')->toString(),
-            'price' => $request->integer('price'),
-            'currency' => config('marketplace.currency'),
-            'cover_path' => $this->storeMedia($request->file('cover_image'), 'covers'),
-            'preview_paths' => $this->storePreviewImages($request->file('preview_images', [])),
-            'download_path' => $this->storeDownload($request->file('download_file')),
-            'download_name' => $request->file('download_file')->getClientOriginalName(),
-            'download_mime_type' => $request->file('download_file')->getMimeType(),
-            'download_size' => $request->file('download_file')->getSize(),
-            'published_at' => now(),
+        $attributes = $this->contentAttributes($request);
+        $providerId = $request->integer('provider_id') ?: null;
+        $price = $request->integer('price') ?: null;
+
+        if ($providerId !== null && $price !== null) {
+            $content = Content::create([
+                ...$attributes,
+                'provider_id' => $providerId,
+                'slug' => $this->makeUniqueSlug($request->string('title')->toString()),
+                'price' => $price,
+                'published_at' => now(),
+            ]);
+
+            $this->syncTags($content, $request->string('tag_names')->toString());
+
+            return to_route('admin.contents.index')->with('success', 'Content has been created.');
+        }
+
+        $stockedContent = StockedContent::create([
+            ...$attributes,
+            'provider_id' => $providerId,
+            'price' => $price,
         ]);
 
-        $this->syncTags($content, $request->string('tag_names')->toString());
+        $this->syncTags($stockedContent, $request->string('tag_names')->toString());
 
-        return to_route('admin.contents.index')->with('success', 'Content has been created.');
+        return to_route('admin.stocked-contents.index')->with('success', 'Stocked content has been created.');
     }
 
     public function edit(Content $content): Response
@@ -219,6 +227,27 @@ class ManagedContentController extends Controller
         return $slug;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function contentAttributes(StoreContentRequest $request): array
+    {
+        $downloadFile = $request->file('download_file');
+
+        return [
+            'genre_id' => $request->integer('genre_id'),
+            'title' => $request->string('title')->toString(),
+            'description' => $request->string('description')->toString(),
+            'currency' => config('marketplace.currency'),
+            'cover_path' => $this->storeMedia($request->file('cover_image'), 'covers'),
+            'preview_paths' => $this->storePreviewImages($request->file('preview_images', [])),
+            'download_path' => $this->storeDownload($downloadFile),
+            'download_name' => $downloadFile->getClientOriginalName(),
+            'download_mime_type' => $downloadFile->getMimeType(),
+            'download_size' => $downloadFile->getSize(),
+        ];
+    }
+
     private function storeMedia(?UploadedFile $file, string $directory): ?string
     {
         if (! $file) {
@@ -270,7 +299,7 @@ class ManagedContentController extends Controller
         Storage::disk(config('marketplace.content_disk'))->delete($path);
     }
 
-    private function syncTags(Content $content, string $tagNames): void
+    private function syncTags(Content|StockedContent $content, string $tagNames): void
     {
         $tagIds = collect(explode(',', $tagNames))
             ->map(fn (string $tag): string => trim($tag))

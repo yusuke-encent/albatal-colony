@@ -64,6 +64,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return HasMany<StockedContent, $this>
+     */
+    public function stockedContents(): HasMany
+    {
+        return $this->hasMany(StockedContent::class, 'provider_id');
+    }
+
+    /**
      * @return HasMany<Purchase, $this>
      */
     public function purchases(): HasMany

@@ -24,8 +24,8 @@ const props = defineProps<{
         title: string;
         slug: string;
         description: string;
-        price: number;
-        formatted_price: string;
+        price: number | null;
+        formatted_price: string | null;
         cover_url: string | null;
         preview_urls: string[];
         download_name: string;
@@ -96,7 +96,9 @@ function submit(): void {
                     v-model="form.provider_id"
                     class="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm"
                 >
-                    <option value="">Select a creator</option>
+                    <option value="">
+                        {{ mode === 'create' ? 'Optional for stocked content' : 'Select a creator' }}
+                    </option>
                     <option
                         v-for="provider in providers"
                         :key="provider.id"
@@ -105,6 +107,9 @@ function submit(): void {
                         {{ provider.name }} ({{ provider.email }})
                     </option>
                 </select>
+                <p v-if="mode === 'create'" class="text-xs text-muted-foreground">
+                    Leave blank to save this item as stocked content for later provider assignment.
+                </p>
                 <InputError :message="form.errors.provider_id" />
             </div>
 
@@ -137,7 +142,16 @@ function submit(): void {
         <div class="grid gap-6 lg:grid-cols-[0.6fr_1.4fr]">
             <div class="space-y-2">
                 <Label for="price">Price (JPY)</Label>
-                <Input id="price" v-model="form.price" type="number" min="100" />
+                <Input
+                    id="price"
+                    v-model="form.price"
+                    type="number"
+                    min="100"
+                    :placeholder="mode === 'create' ? 'Optional for stocked content' : undefined"
+                />
+                <p v-if="mode === 'create'" class="text-xs text-muted-foreground">
+                    If provider or price is missing, the upload is stored as stocked content.
+                </p>
                 <InputError :message="form.errors.price" />
             </div>
 

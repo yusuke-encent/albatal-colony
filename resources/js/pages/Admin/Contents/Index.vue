@@ -61,6 +61,12 @@ function destroyContent(slug: string): void {
                 >
                     New Content
                 </Link>
+                <Link
+                    href="/admin/stocked-contents"
+                    class="rounded-full border border-black/10 px-5 py-3 text-sm font-medium"
+                >
+                    Stocked Contents
+                </Link>
             </section>
 
             <section class="grid gap-5 xl:grid-cols-2">

@@ -27,4 +27,12 @@ class Tag extends Model
     {
         return $this->belongsToMany(Content::class);
     }
+
+    /**
+     * @return BelongsToMany<StockedContent, $this>
+     */
+    public function stockedContents(): BelongsToMany
+    {
+        return $this->belongsToMany(StockedContent::class);
+    }
 }

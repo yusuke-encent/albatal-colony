@@ -28,4 +28,12 @@ class Genre extends Model
     {
         return $this->hasMany(Content::class);
     }
+
+    /**
+     * @return HasMany<StockedContent, $this>
+     */
+    public function stockedContents(): HasMany
+    {
+        return $this->hasMany(StockedContent::class);
+    }
 }

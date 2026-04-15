@@ -54,6 +54,11 @@ const mainNavItems = computed<NavItem[]>(() => {
                 icon: FolderCog,
             },
             {
+                title: 'Stocked Contents',
+                href: '/admin/stocked-contents',
+                icon: FolderCog,
+            },
+            {
                 title: 'Sales Report',
                 href: '/admin/sales',
                 icon: ShoppingBag,

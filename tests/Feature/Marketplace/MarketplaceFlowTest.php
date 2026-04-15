@@ -4,6 +4,7 @@ use App\Models\Content;
 use App\Models\Genre;
 use App\Models\PaymentSession;
 use App\Models\Purchase;
+use App\Models\StockedContent;
 use App\Models\Tag;
 use App\Models\User;
 use App\Support\PaymentSessionStatus;
@@ -73,6 +74,142 @@ it('allows admins to create content and blocks providers from the admin panel', 
 
     expect(Content::query()->where('title', 'Admin Upload')->exists())->toBeTrue();
     expect(Tag::query()->where('slug', 'anime')->exists())->toBeTrue();
+});
+
+it('stores uploads without provider or price as stocked content', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+
+    $admin = User::factory()->admin()->create();
+    $genre = Genre::factory()->create([
+        'name' => 'Audio',
+        'slug' => 'audio',
+    ]);
+
+    $response = $this->actingAs($admin)->post('/admin/contents', [
+        'genre_id' => $genre->id,
+        'title' => 'Stocked Upload',
+        'description' => 'Waiting for provider assignment.',
+        'tag_names' => 'draft, soundtrack',
+        'cover_image' => UploadedFile::fake()->image('cover.jpg'),
+        'preview_images' => [
+            UploadedFile::fake()->image('preview-1.jpg'),
+        ],
+        'download_file' => UploadedFile::fake()->create('asset.zip', 128, 'application/zip'),
+    ]);
+
+    $response->assertRedirect('/admin/stocked-contents');
+    $response->assertSessionHas('success', 'Stocked content has been created.');
+
+    expect(Content::query()->where('title', 'Stocked Upload')->exists())->toBeFalse();
+
+    $stockedContent = StockedContent::query()
+        ->with('tags')
+        ->where('title', 'Stocked Upload')
+        ->first();
+
+    expect($stockedContent)->not->toBeNull()
+        ->and($stockedContent->provider_id)->toBeNull()
+        ->and($stockedContent->price)->toBeNull()
+        ->and($stockedContent->genre_id)->toBe($genre->id)
+        ->and($stockedContent->tags->pluck('slug')->all())->toBe(['draft', 'soundtrack']);
+});
+
+it('stores partially configured uploads as stocked content', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+
+    $admin = User::factory()->admin()->create();
+    $provider = User::factory()->provider()->create();
+    $genre = Genre::factory()->create();
+
+    $response = $this->actingAs($admin)->post('/admin/contents', [
+        'provider_id' => $provider->id,
+        'genre_id' => $genre->id,
+        'title' => 'Pending Price Upload',
+        'description' => 'Provider selected before pricing.',
+        'download_file' => UploadedFile::fake()->create('asset.zip', 128, 'application/zip'),
+    ]);
+
+    $response->assertRedirect('/admin/stocked-contents');
+    $response->assertSessionHas('success', 'Stocked content has been created.');
+
+    expect(Content::query()->where('title', 'Pending Price Upload')->exists())->toBeFalse();
+
+    $stockedContent = StockedContent::query()
+        ->where('title', 'Pending Price Upload')
+        ->first();
+
+    expect($stockedContent)->not->toBeNull()
+        ->and($stockedContent->provider_id)->toBe($provider->id)
+        ->and($stockedContent->price)->toBeNull();
+});
+
+it('shows stocked contents in the admin list and detail screens', function () {
+    $admin = User::factory()->admin()->create();
+    $provider = User::factory()->provider()->create();
+    $genre = Genre::factory()->create([
+        'name' => 'Drama',
+        'slug' => 'drama',
+    ]);
+    $tag = Tag::factory()->create([
+        'name' => 'Limited',
+        'slug' => 'limited',
+    ]);
+
+    $stockedContent = StockedContent::factory()->create([
+        'provider_id' => $provider->id,
+        'genre_id' => $genre->id,
+        'title' => 'Reserved Catalog Item',
+        'description' => 'Awaiting release setup.',
+        'price' => null,
+        'cover_path' => 'https://example.com/cover.jpg',
+        'preview_paths' => [
+            'https://example.com/preview-1.jpg',
+            'https://example.com/preview-2.jpg',
+        ],
+    ]);
+    $stockedContent->tags()->sync([$tag->id]);
+
+    $indexResponse = $this->actingAs($admin)->get('/admin/stocked-contents');
+
+    $indexResponse->assertSuccessful();
+    $indexResponse->assertSee('Reserved Catalog Item');
+    $indexResponse->assertSee($provider->name);
+    $indexResponse->assertSee('preview-1.jpg', false);
+
+    $showResponse = $this->actingAs($admin)->get("/admin/stocked-contents/{$stockedContent->id}");
+
+    $showResponse->assertSuccessful();
+    $showResponse->assertSee('Awaiting release setup.');
+    $showResponse->assertSee('Limited');
+    $showResponse->assertSee('Reserved Catalog Item');
+});
+
+it('allows admins to delete stocked contents', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+
+    $admin = User::factory()->admin()->create();
+    $stockedContent = StockedContent::factory()->create([
+        'cover_path' => 'covers/stocked-cover.jpg',
+        'preview_paths' => ['previews/stocked-preview.jpg'],
+        'download_path' => 'downloads/stocked.zip',
+    ]);
+
+    Storage::disk('public')->put('covers/stocked-cover.jpg', 'cover');
+    Storage::disk('public')->put('previews/stocked-preview.jpg', 'preview');
+    Storage::disk('local')->put('downloads/stocked.zip', 'archive');
+
+    $response = $this->actingAs($admin)->delete("/admin/stocked-contents/{$stockedContent->id}");
+
+    $response->assertRedirect('/admin/stocked-contents');
+    $response->assertSessionHas('success', 'Stocked content has been deleted.');
+
+    expect(StockedContent::query()->find($stockedContent->id))->toBeNull();
+    Storage::disk('public')->assertMissing('covers/stocked-cover.jpg');
+    Storage::disk('public')->assertMissing('previews/stocked-preview.jpg');
+    Storage::disk('local')->assertMissing('downloads/stocked.zip');
 });
 
 it('redirects buyers to the library when content is already purchased', function () {

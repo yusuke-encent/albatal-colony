@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ManagedContentController;
 use App\Http\Controllers\Admin\SaleReportController;
+use App\Http\Controllers\Admin\StockedContentController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ContentController;
@@ -65,6 +66,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('contents/{content}/edit', [ManagedContentController::class, 'edit'])->name('contents.edit');
             Route::put('contents/{content}', [ManagedContentController::class, 'update'])->name('contents.update');
             Route::delete('contents/{content}', [ManagedContentController::class, 'destroy'])->name('contents.destroy');
+            Route::get('stocked-contents', [StockedContentController::class, 'index'])->name('stocked-contents.index');
+            Route::get('stocked-contents/{stockedContent}', [StockedContentController::class, 'show'])->name('stocked-contents.show');
+            Route::delete('stocked-contents/{stockedContent}', [StockedContentController::class, 'destroy'])->name('stocked-contents.destroy');
 
             Route::get('sales', SaleReportController::class)->name('sales.index');
             Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
