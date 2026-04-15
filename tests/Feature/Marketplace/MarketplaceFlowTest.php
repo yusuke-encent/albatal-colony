@@ -12,6 +12,15 @@ use App\Support\PurchaseStatus;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
+function fakeMarketplaceDisks(): void
+{
+    config()->set('marketplace.media_disk', 'marketplace-media');
+    config()->set('marketplace.content_disk', 'marketplace-downloads');
+
+    Storage::fake('marketplace-media');
+    Storage::fake('marketplace-downloads');
+}
+
 it('renders the storefront grouped by genre', function () {
     $genre = Genre::factory()->create([
         'name' => 'Image',
@@ -42,8 +51,7 @@ it('renders the storefront grouped by genre', function () {
 });
 
 it('allows admins to create content and blocks providers from the admin panel', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeMarketplaceDisks();
 
     $admin = User::factory()->admin()->create();
     $provider = User::factory()->provider()->create();
@@ -72,13 +80,20 @@ it('allows admins to create content and blocks providers from the admin panel', 
     $response->assertRedirect('/admin/contents');
     $response->assertSessionHas('success', 'Content has been created.');
 
-    expect(Content::query()->where('title', 'Admin Upload')->exists())->toBeTrue();
+    $content = Content::query()->where('title', 'Admin Upload')->first();
+
+    expect($content)->not->toBeNull();
     expect(Tag::query()->where('slug', 'anime')->exists())->toBeTrue();
+    Storage::disk('marketplace-media')->assertExists($content->cover_path);
+    Storage::disk('marketplace-downloads')->assertExists($content->download_path);
+
+    foreach ($content->preview_paths as $previewPath) {
+        Storage::disk('marketplace-media')->assertExists($previewPath);
+    }
 });
 
 it('stores uploads without provider or price as stocked content', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeMarketplaceDisks();
 
     $admin = User::factory()->admin()->create();
     $genre = Genre::factory()->create([
@@ -113,11 +128,16 @@ it('stores uploads without provider or price as stocked content', function () {
         ->and($stockedContent->price)->toBeNull()
         ->and($stockedContent->genre_id)->toBe($genre->id)
         ->and($stockedContent->tags->pluck('slug')->all())->toBe(['draft', 'soundtrack']);
+    Storage::disk('marketplace-media')->assertExists($stockedContent->cover_path);
+    Storage::disk('marketplace-downloads')->assertExists($stockedContent->download_path);
+
+    foreach ($stockedContent->preview_paths as $previewPath) {
+        Storage::disk('marketplace-media')->assertExists($previewPath);
+    }
 });
 
 it('stores partially configured uploads as stocked content', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeMarketplaceDisks();
 
     $admin = User::factory()->admin()->create();
     $provider = User::factory()->provider()->create();
@@ -187,8 +207,7 @@ it('shows stocked contents in the admin list and detail screens', function () {
 });
 
 it('allows admins to delete stocked contents', function () {
-    Storage::fake('public');
-    Storage::fake('local');
+    fakeMarketplaceDisks();
 
     $admin = User::factory()->admin()->create();
     $stockedContent = StockedContent::factory()->create([
@@ -197,9 +216,9 @@ it('allows admins to delete stocked contents', function () {
         'download_path' => 'downloads/stocked.zip',
     ]);
 
-    Storage::disk('public')->put('covers/stocked-cover.jpg', 'cover');
-    Storage::disk('public')->put('previews/stocked-preview.jpg', 'preview');
-    Storage::disk('local')->put('downloads/stocked.zip', 'archive');
+    Storage::disk('marketplace-media')->put('covers/stocked-cover.jpg', 'cover');
+    Storage::disk('marketplace-media')->put('previews/stocked-preview.jpg', 'preview');
+    Storage::disk('marketplace-downloads')->put('downloads/stocked.zip', 'archive');
 
     $response = $this->actingAs($admin)->delete("/admin/stocked-contents/{$stockedContent->id}");
 
@@ -207,9 +226,9 @@ it('allows admins to delete stocked contents', function () {
     $response->assertSessionHas('success', 'Stocked content has been deleted.');
 
     expect(StockedContent::query()->find($stockedContent->id))->toBeNull();
-    Storage::disk('public')->assertMissing('covers/stocked-cover.jpg');
-    Storage::disk('public')->assertMissing('previews/stocked-preview.jpg');
-    Storage::disk('local')->assertMissing('downloads/stocked.zip');
+    Storage::disk('marketplace-media')->assertMissing('covers/stocked-cover.jpg');
+    Storage::disk('marketplace-media')->assertMissing('previews/stocked-preview.jpg');
+    Storage::disk('marketplace-downloads')->assertMissing('downloads/stocked.zip');
 });
 
 it('redirects buyers to the library when content is already purchased', function () {
@@ -231,7 +250,7 @@ it('redirects buyers to the library when content is already purchased', function
 });
 
 it('completes the mock checkout flow and unlocks downloads', function () {
-    Storage::fake('local');
+    config()->set('marketplace.content_disk', 'local');
 
     $buyer = User::factory()->create();
     $provider = User::factory()->provider()->create();
@@ -272,7 +291,8 @@ it('completes the mock checkout flow and unlocks downloads', function () {
 
     $downloadResponse = $this->actingAs($buyer)->get("/downloads/{$purchase->id}");
 
-    $downloadResponse->assertDownload('launch.mp4');
+    $downloadResponse->assertSuccessful();
+    expect($downloadResponse->streamedContent())->toBe('video-data');
 });
 
 it('finalizes purchases through the payment webhook endpoint', function () {

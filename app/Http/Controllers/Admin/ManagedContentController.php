@@ -254,7 +254,7 @@ class ManagedContentController extends Controller
             return null;
         }
 
-        return $file->store($directory, config('marketplace.media_disk'));
+        return $file->storePublicly($directory, config('marketplace.media_disk'));
     }
 
     /**
@@ -268,7 +268,7 @@ class ManagedContentController extends Controller
         }
 
         return collect($files)
-            ->map(fn (UploadedFile $file): string => $file->store('previews', config('marketplace.media_disk')))
+            ->map(fn (UploadedFile $file): string => $file->storePublicly('previews', config('marketplace.media_disk')))
             ->all();
     }
 

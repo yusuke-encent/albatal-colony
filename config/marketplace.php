@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'content_disk' => env('MARKETPLACE_CONTENT_DISK', 'local'),
+    'content_disk' => env('MARKETPLACE_CONTENT_DISK', 'private'),
     'media_disk' => env('MARKETPLACE_MEDIA_DISK', 'public'),
     'currency' => env('MARKETPLACE_CURRENCY', 'JPY'),
     'payment_gateway' => env('MARKETPLACE_PAYMENT_GATEWAY', 'mock'),
