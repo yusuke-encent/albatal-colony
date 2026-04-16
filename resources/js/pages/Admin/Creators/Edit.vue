@@ -10,9 +10,16 @@ defineProps<{
         id: number;
         name: string;
         email: string;
+        apc_merchant_id: number;
         provided_contents_count: number;
         stocked_contents_count: number;
         created_at: string | null;
+        price_options: Array<{
+            id: number;
+            price: number;
+            formatted_price: string;
+            product_code: string;
+        }>;
     };
 }>();
 

@@ -13,6 +13,8 @@ defineProps<{
         description: string;
         price: number;
         formatted_price: string;
+        provider_price_option_id: number | null;
+        product_code: string | null;
         cover_url: string | null;
         preview_urls: string[];
         download_name: string;
@@ -26,6 +28,12 @@ defineProps<{
         id: number;
         name: string;
         email: string;
+        price_options: Array<{
+            id: number;
+            price: number;
+            formatted_price: string;
+            product_code: string;
+        }>;
     }>;
     genres: Array<{
         id: number;

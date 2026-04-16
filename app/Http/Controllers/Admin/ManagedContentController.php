@@ -7,9 +7,11 @@ use App\Http\Requests\Admin\StoreContentRequest;
 use App\Http\Requests\Admin\UpdateContentRequest;
 use App\Models\Content;
 use App\Models\Genre;
+use App\Models\ProviderPriceOption;
 use App\Models\StockedContent;
 use App\Models\Tag;
 use App\Models\User;
+use App\Services\Marketplace\GeneratesProductCodes;
 use App\Support\UserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
@@ -26,7 +28,7 @@ class ManagedContentController extends Controller
 
         return Inertia::render('Admin/Contents/Index', [
             'contents' => Content::query()
-                ->with(['provider', 'genre', 'tags'])
+                ->with(['provider', 'providerPriceOption.provider', 'genre', 'tags'])
                 ->latest()
                 ->paginate(12)
                 ->through(fn (Content $content): array => $this->contentPayload($content)),
@@ -49,14 +51,17 @@ class ManagedContentController extends Controller
 
         $attributes = $this->contentAttributes($request);
         $providerId = $request->integer('provider_id') ?: null;
-        $price = $request->integer('price') ?: null;
+        $providerPriceOptionId = $request->integer('provider_price_option_id') ?: null;
 
-        if ($providerId !== null && $price !== null) {
+        if ($providerId !== null && $providerPriceOptionId !== null) {
+            $providerPriceOption = $this->findProviderPriceOption($providerId, $providerPriceOptionId);
+
             $content = Content::create([
                 ...$attributes,
                 'provider_id' => $providerId,
+                'provider_price_option_id' => $providerPriceOption->id,
                 'slug' => $this->makeUniqueSlug($request->string('title')->toString()),
-                'price' => $price,
+                'price' => $providerPriceOption->price,
                 'published_at' => now(),
             ]);
 
@@ -68,7 +73,8 @@ class ManagedContentController extends Controller
         $stockedContent = StockedContent::create([
             ...$attributes,
             'provider_id' => $providerId,
-            'price' => $price,
+            'provider_price_option_id' => null,
+            'price' => null,
         ]);
 
         $this->syncTags($stockedContent, $request->string('tag_names')->toString());
@@ -80,7 +86,7 @@ class ManagedContentController extends Controller
     {
         $this->authorize('update', $content);
 
-        $content->load(['provider', 'genre', 'tags']);
+        $content->load(['provider', 'providerPriceOption.provider', 'genre', 'tags']);
 
         return Inertia::render('Admin/Contents/Edit', [
             'content' => $this->contentPayload($content),
@@ -92,6 +98,12 @@ class ManagedContentController extends Controller
     public function update(UpdateContentRequest $request, Content $content): RedirectResponse
     {
         $this->authorize('update', $content);
+
+        $providerId = $request->integer('provider_id');
+        $providerPriceOption = $this->findProviderPriceOption(
+            $providerId,
+            $request->integer('provider_price_option_id'),
+        );
 
         $coverPath = $content->cover_path;
 
@@ -122,12 +134,13 @@ class ManagedContentController extends Controller
         }
 
         $content->update([
-            'provider_id' => $request->integer('provider_id'),
+            'provider_id' => $providerId,
+            'provider_price_option_id' => $providerPriceOption->id,
             'genre_id' => $request->integer('genre_id'),
             'title' => $request->string('title')->toString(),
             'slug' => $this->makeUniqueSlug($request->string('title')->toString(), $content->id),
             'description' => $request->string('description')->toString(),
-            'price' => $request->integer('price'),
+            'price' => $providerPriceOption->price,
             'cover_path' => $coverPath,
             'preview_paths' => $previewPaths,
             'download_path' => $downloadPath,
@@ -158,14 +171,28 @@ class ManagedContentController extends Controller
      */
     private function providers(): array
     {
+        $generator = app(GeneratesProductCodes::class);
+
         return User::query()
             ->where('role', UserRole::Provider)
+            ->with([
+                'priceOptions' => fn ($query) => $query->orderBy('price'),
+            ])
             ->orderBy('name')
             ->get(['id', 'name', 'email'])
             ->map(fn (User $provider): array => [
                 'id' => $provider->id,
                 'name' => $provider->name,
                 'email' => $provider->email,
+                'apc_merchant_id' => $provider->apc_merchant_id,
+                'price_options' => $provider->priceOptions
+                    ->map(fn (ProviderPriceOption $priceOption): array => [
+                        'id' => $priceOption->id,
+                        'price' => $priceOption->price,
+                        'formatted_price' => $priceOption->formatted_price,
+                        'product_code' => $generator->forProviderPrice($provider->apc_merchant_id, $priceOption->price),
+                    ])
+                    ->all(),
             ])->all();
     }
 
@@ -202,6 +229,8 @@ class ManagedContentController extends Controller
             'download_name' => $content->download_name,
             'provider_id' => $content->provider_id,
             'provider_name' => $content->provider->name,
+            'provider_price_option_id' => $content->provider_price_option_id,
+            'product_code' => $content->product_code,
             'genre_id' => $content->genre_id,
             'genre_name' => $content->genre->name,
             'tag_names' => $content->tags->pluck('name')->implode(', '),
@@ -246,6 +275,13 @@ class ManagedContentController extends Controller
             'download_mime_type' => $downloadFile->getMimeType(),
             'download_size' => $downloadFile->getSize(),
         ];
+    }
+
+    private function findProviderPriceOption(int $providerId, int $providerPriceOptionId): ProviderPriceOption
+    {
+        return ProviderPriceOption::query()
+            ->where('provider_id', $providerId)
+            ->findOrFail($providerPriceOptionId);
     }
 
     private function storeMedia(?UploadedFile $file, string $directory): ?string

@@ -55,6 +55,7 @@ it('allows admins to create content and blocks providers from the admin panel', 
 
     $admin = User::factory()->admin()->create();
     $provider = User::factory()->provider()->create();
+    $providerPriceOption = $provider->priceOptions()->where('price', 3000)->firstOrFail();
     $genre = Genre::factory()->create([
         'name' => 'Other',
         'slug' => 'other',
@@ -64,10 +65,10 @@ it('allows admins to create content and blocks providers from the admin panel', 
 
     $response = $this->actingAs($admin)->post('/admin/contents', [
         'provider_id' => $provider->id,
+        'provider_price_option_id' => $providerPriceOption->id,
         'genre_id' => $genre->id,
         'title' => 'Admin Upload',
         'description' => 'Managed by admin.',
-        'price' => 5500,
         'tag_names' => 'anime, bundle',
         'cover_image' => UploadedFile::fake()->image('cover.jpg'),
         'preview_images' => [
@@ -82,7 +83,10 @@ it('allows admins to create content and blocks providers from the admin panel', 
 
     $content = Content::query()->where('title', 'Admin Upload')->first();
 
-    expect($content)->not->toBeNull();
+    expect($content)->not->toBeNull()
+        ->and($content->provider_price_option_id)->toBe($providerPriceOption->id)
+        ->and($content->price)->toBe(3000)
+        ->and($content->sku)->not->toBeNull();
     expect(Tag::query()->where('slug', 'anime')->exists())->toBeTrue();
     Storage::disk('marketplace-media')->assertExists($content->cover_path);
     Storage::disk('marketplace-downloads')->assertExists($content->download_path);
@@ -163,6 +167,51 @@ it('stores partially configured uploads as stocked content', function () {
     expect($stockedContent)->not->toBeNull()
         ->and($stockedContent->provider_id)->toBe($provider->id)
         ->and($stockedContent->price)->toBeNull();
+});
+
+it('rejects price options from another creator', function () {
+    fakeMarketplaceDisks();
+
+    $admin = User::factory()->admin()->create();
+    $provider = User::factory()->provider()->create();
+    $otherProvider = User::factory()->provider()->create();
+    $invalidPriceOption = $otherProvider->priceOptions()->where('price', 3000)->firstOrFail();
+    $genre = Genre::factory()->create();
+
+    $response = $this->actingAs($admin)
+        ->from('/admin/contents/create')
+        ->post('/admin/contents', [
+            'provider_id' => $provider->id,
+            'provider_price_option_id' => $invalidPriceOption->id,
+            'genre_id' => $genre->id,
+            'title' => 'Rejected Upload',
+            'description' => 'Should not be created.',
+            'download_file' => UploadedFile::fake()->create('asset.zip', 128, 'application/zip'),
+        ]);
+
+    $response->assertRedirect('/admin/contents/create');
+    $response->assertSessionHasErrors('provider_price_option_id');
+
+    expect(Content::query()->where('title', 'Rejected Upload')->exists())->toBeFalse()
+        ->and(StockedContent::query()->where('title', 'Rejected Upload')->exists())->toBeFalse();
+});
+
+it('keeps legacy content readable when its price is outside the configured price set', function () {
+    $provider = User::factory()->provider()->create();
+    $content = Content::factory()->create([
+        'provider_id' => $provider->id,
+        'provider_price_option_id' => null,
+        'price' => 5500,
+        'title' => 'Legacy Price Content',
+        'slug' => 'legacy-price-content',
+    ]);
+
+    $response = $this->get("/contents/{$content->slug}");
+
+    $response->assertSuccessful();
+    $response->assertSee('Legacy Price Content');
+
+    expect($content->fresh()->provider_price_option_id)->toBeNull();
 });
 
 it('shows stocked contents in the admin list and detail screens', function () {

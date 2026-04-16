@@ -21,6 +21,7 @@ class StockedContent extends Model
      */
     protected $fillable = [
         'provider_id',
+        'provider_price_option_id',
         'genre_id',
         'title',
         'description',
@@ -59,6 +60,14 @@ class StockedContent extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'provider_id');
+    }
+
+    /**
+     * @return BelongsTo<ProviderPriceOption, $this>
+     */
+    public function providerPriceOption(): BelongsTo
+    {
+        return $this->belongsTo(ProviderPriceOption::class);
     }
 
     /**
@@ -128,5 +137,13 @@ class StockedContent extends Model
 
             return number_format($this->price).' '.$this->currency;
         });
+    }
+
+    /**
+     * @return Attribute<string|null, never>
+     */
+    protected function productCode(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->providerPriceOption?->product_code);
     }
 }

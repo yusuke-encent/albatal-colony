@@ -15,7 +15,7 @@ class HomeController extends Controller
         $genres = Genre::query()
             ->with([
                 'contents' => fn ($query) => $query
-                    ->with(['provider', 'genre', 'tags'])
+                    ->with(['provider', 'providerPriceOption.provider', 'genre', 'tags'])
                     ->whereNotNull('published_at')
                     ->latest()
                     ->limit(6),
@@ -34,7 +34,7 @@ class HomeController extends Controller
             ->all();
 
         $featuredContents = Content::query()
-            ->with(['provider', 'genre', 'tags'])
+            ->with(['provider', 'providerPriceOption.provider', 'genre', 'tags'])
             ->whereNotNull('published_at')
             ->latest()
             ->limit(4)
@@ -63,6 +63,7 @@ class HomeController extends Controller
             'slug' => $content->slug,
             'price' => $content->price,
             'formatted_price' => $content->formatted_price,
+            'product_code' => $content->product_code,
             'cover_url' => $content->cover_url,
             'preview_urls' => $content->preview_urls,
             'provider' => [

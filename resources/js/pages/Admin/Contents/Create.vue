@@ -9,6 +9,12 @@ defineProps<{
         id: number;
         name: string;
         email: string;
+        price_options: Array<{
+            id: number;
+            price: number;
+            formatted_price: string;
+            product_code: string;
+        }>;
     }>;
     genres: Array<{
         id: number;

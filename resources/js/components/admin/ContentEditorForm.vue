@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
+import {
+    store as storeContent,
+    update as updateContent,
+} from '@/actions/App/Http/Controllers/Admin/ManagedContentController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +16,12 @@ const props = defineProps<{
         id: number;
         name: string;
         email: string;
+        price_options: Array<{
+            id: number;
+            price: number;
+            formatted_price: string;
+            product_code: string;
+        }>;
     }>;
     genres: Array<{
         id: number;
@@ -26,6 +36,8 @@ const props = defineProps<{
         description: string;
         price: number | null;
         formatted_price: string | null;
+        provider_price_option_id: number | null;
+        product_code: string | null;
         cover_url: string | null;
         preview_urls: string[];
         download_name: string;
@@ -39,10 +51,10 @@ const props = defineProps<{
 
 const form = useForm({
     provider_id: props.content?.provider_id?.toString() || '',
+    provider_price_option_id: props.content?.provider_price_option_id?.toString() || '',
     genre_id: props.content?.genre_id?.toString() || '',
     title: props.content?.title || '',
     description: props.content?.description || '',
-    price: props.content?.price?.toString() || '',
     tag_names: props.content?.tag_names || '',
     cover_image: null as File | null,
     preview_images: [] as File[],
@@ -51,6 +63,29 @@ const form = useForm({
 
 const submitLabel = computed(() =>
     props.mode === 'create' ? 'Create Content' : 'Save Changes',
+);
+
+const selectedProvider = computed(() =>
+    props.providers.find((provider) => provider.id.toString() === form.provider_id) || null,
+);
+
+const selectedPriceOption = computed(() =>
+    selectedProvider.value?.price_options.find(
+        (priceOption) => priceOption.id.toString() === form.provider_price_option_id,
+    ) || null,
+);
+
+watch(
+    () => form.provider_id,
+    () => {
+        if (
+            !selectedProvider.value?.price_options.some(
+                (priceOption) => priceOption.id.toString() === form.provider_price_option_id,
+            )
+        ) {
+            form.provider_price_option_id = '';
+        }
+    },
 );
 
 function onCoverChange(event: Event): void {
@@ -70,7 +105,7 @@ function onDownloadChange(event: Event): void {
 
 function submit(): void {
     if (props.mode === 'create') {
-        form.post('/admin/contents', {
+        form.post(storeContent.url(), {
             forceFormData: true,
         });
 
@@ -80,9 +115,14 @@ function submit(): void {
     form.transform((data) => ({
         ...data,
         _method: 'put',
-    })).post(`/admin/contents/${props.content?.slug}`, {
-        forceFormData: true,
-    });
+    })).post(
+        updateContent.url({
+            content: props.content?.slug || '',
+        }),
+        {
+            forceFormData: true,
+        },
+    );
 }
 </script>
 
@@ -141,18 +181,38 @@ function submit(): void {
 
         <div class="grid gap-6 lg:grid-cols-[0.6fr_1.4fr]">
             <div class="space-y-2">
-                <Label for="price">Price (JPY)</Label>
-                <Input
-                    id="price"
-                    v-model="form.price"
-                    type="number"
-                    min="100"
-                    :placeholder="mode === 'create' ? 'Optional for stocked content' : undefined"
-                />
+                <Label for="provider_price_option_id">Price Set</Label>
+                <select
+                    id="provider_price_option_id"
+                    v-model="form.provider_price_option_id"
+                    class="w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm"
+                    :disabled="!selectedProvider"
+                >
+                    <option value="">
+                        {{
+                            mode === 'create'
+                                ? 'Optional for stocked content'
+                                : 'Select a price option'
+                        }}
+                    </option>
+                    <option
+                        v-for="priceOption in selectedProvider?.price_options || []"
+                        :key="priceOption.id"
+                        :value="priceOption.id.toString()"
+                    >
+                        {{ priceOption.formatted_price }} / {{ priceOption.product_code }}
+                    </option>
+                </select>
                 <p v-if="mode === 'create'" class="text-xs text-muted-foreground">
-                    If provider or price is missing, the upload is stored as stocked content.
+                    If provider or price option is missing, the upload is stored as stocked content.
                 </p>
-                <InputError :message="form.errors.price" />
+                <p
+                    v-else-if="content?.provider_price_option_id === null"
+                    class="text-xs text-amber-700"
+                >
+                    This content uses a legacy price. Select a creator price option before saving.
+                </p>
+                <InputError :message="form.errors.provider_price_option_id" />
             </div>
 
             <div class="space-y-2">
@@ -167,6 +227,36 @@ function submit(): void {
                 </p>
                 <InputError :message="form.errors.tag_names" />
             </div>
+        </div>
+
+        <div
+            v-if="selectedPriceOption || (mode === 'edit' && content?.provider_price_option_id === null)"
+            class="rounded-[1.5rem] border border-black/5 bg-[#fbfaf8] p-5"
+        >
+            <template v-if="selectedPriceOption">
+                <p class="text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                    Selected Price Set
+                </p>
+                <div class="mt-3 flex flex-wrap items-end gap-4">
+                    <div>
+                        <p class="text-2xl font-semibold">{{ selectedPriceOption.formatted_price }}</p>
+                        <p class="text-xs text-muted-foreground">
+                            Provider-defined selling price
+                        </p>
+                    </div>
+                    <div class="rounded-full border border-black/10 px-4 py-2 text-sm font-medium">
+                        {{ selectedPriceOption.product_code }}
+                    </div>
+                </div>
+            </template>
+            <template v-else>
+                <p class="text-sm font-medium text-amber-950">
+                    Legacy price: {{ content?.formatted_price }}
+                </p>
+                <p class="mt-2 text-sm text-amber-900">
+                    This listing can still be viewed, but updates now require one of the creator&apos;s configured price sets.
+                </p>
+            </template>
         </div>
 
         <div class="space-y-2">

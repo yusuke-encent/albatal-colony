@@ -44,7 +44,10 @@ it('allows admins to create creator accounts', function () {
         ->and($creator->role)->toBe(UserRole::Provider)
         ->and($generatedPassword)->toBeString()
         ->and($generatedPassword)->not->toBe('')
-        ->and(Hash::check($generatedPassword, $creator->password))->toBeTrue();
+        ->and(Hash::check($generatedPassword, $creator->password))->toBeTrue()
+        ->and($creator->apc_merchant_id)->toBe(1)
+        ->and($creator->priceOptions()->orderBy('price')->pluck('price')->all())
+        ->toBe(config('marketplace.default_provider_prices'));
 });
 
 it('allows admins to update creator account details', function () {
@@ -57,6 +60,7 @@ it('allows admins to update creator account details', function () {
     $response = $this->actingAs($admin)->put("/admin/creators/{$creator->id}", [
         'name' => 'Updated Creator',
         'email' => 'updated.creator@example.com',
+        'apc_merchant_id' => 77,
         'password' => 'new-password',
         'password_confirmation' => 'new-password',
     ]);
@@ -68,8 +72,95 @@ it('allows admins to update creator account details', function () {
 
     expect($creator->name)->toBe('Updated Creator')
         ->and($creator->email)->toBe('updated.creator@example.com')
+        ->and($creator->apc_merchant_id)->toBe(77)
         ->and($creator->role)->toBe(UserRole::Provider)
         ->and(Hash::check('new-password', $creator->password))->toBeTrue();
+});
+
+it('allows admins to append creator price options', function () {
+    $admin = User::factory()->admin()->create();
+    $creator = User::factory()->provider()->create([
+        'name' => 'Original Creator',
+        'email' => 'original.creator@example.com',
+    ]);
+
+    $response = $this->actingAs($admin)->put("/admin/creators/{$creator->id}", [
+        'name' => 'Original Creator',
+        'email' => 'original.creator@example.com',
+        'apc_merchant_id' => $creator->apc_merchant_id,
+        'password' => '',
+        'password_confirmation' => '',
+        'new_price_option' => 5500,
+    ]);
+
+    $response->assertRedirect('/admin/creators');
+    $response->assertSessionHas('success', 'Creator account has been updated.');
+
+    expect($creator->fresh()->priceOptions()->orderBy('price')->pluck('price')->all())
+        ->toBe([
+            480,
+            930,
+            1490,
+            1798,
+            2021,
+            3000,
+            3300,
+            4593,
+            5500,
+            9980,
+            12800,
+        ]);
+});
+
+it('prevents duplicate creator price options', function () {
+    $admin = User::factory()->admin()->create();
+    $creator = User::factory()->provider()->create([
+        'name' => 'Original Creator',
+        'email' => 'original.creator@example.com',
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->from("/admin/creators/{$creator->id}/edit")
+        ->put("/admin/creators/{$creator->id}", [
+            'name' => 'Original Creator',
+            'email' => 'original.creator@example.com',
+            'apc_merchant_id' => $creator->apc_merchant_id,
+            'password' => '',
+            'password_confirmation' => '',
+            'new_price_option' => 480,
+        ]);
+
+    $response->assertRedirect("/admin/creators/{$creator->id}/edit");
+    $response->assertSessionHasErrors('new_price_option');
+
+    expect($creator->fresh()->priceOptions()->where('price', 480)->count())->toBe(1);
+});
+
+it('prevents duplicate apc merchant ids when updating creators', function () {
+    $admin = User::factory()->admin()->create();
+    $creator = User::factory()->provider()->create([
+        'name' => 'Original Creator',
+        'email' => 'original.creator@example.com',
+    ]);
+    $otherCreator = User::factory()->provider()->create([
+        'name' => 'Other Creator',
+        'email' => 'other.creator@example.com',
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->from("/admin/creators/{$creator->id}/edit")
+        ->put("/admin/creators/{$creator->id}", [
+            'name' => 'Original Creator',
+            'email' => 'original.creator@example.com',
+            'apc_merchant_id' => $otherCreator->apc_merchant_id,
+            'password' => '',
+            'password_confirmation' => '',
+        ]);
+
+    $response->assertRedirect("/admin/creators/{$creator->id}/edit");
+    $response->assertSessionHasErrors('apc_merchant_id');
+
+    expect($creator->fresh()->apc_merchant_id)->not->toBe($otherCreator->apc_merchant_id);
 });
 
 it('allows admins to delete creator accounts without managed contents', function () {

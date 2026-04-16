@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCreatorRequest;
 use App\Http\Requests\Admin\UpdateCreatorRequest;
 use App\Models\User;
+use App\Services\Marketplace\GeneratesProductCodes;
+use App\Services\Marketplace\EnsuresProviderPriceOptions;
 use App\Support\UserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -19,6 +21,9 @@ class CreatorManagementController extends Controller
         return Inertia::render('Admin/Creators/Index', [
             'creators' => User::query()
                 ->where('role', UserRole::Provider)
+                ->with([
+                    'priceOptions' => fn ($query) => $query->orderBy('price'),
+                ])
                 ->withCount(['providedContents', 'stockedContents'])
                 ->orderBy('name')
                 ->paginate(12)
@@ -28,7 +33,9 @@ class CreatorManagementController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/Creators/Create');
+        return Inertia::render('Admin/Creators/Create', [
+            'defaultPriceOptions' => app(EnsuresProviderPriceOptions::class)->defaultPrices(),
+        ]);
     }
 
     public function store(StoreCreatorRequest $request): RedirectResponse
@@ -52,7 +59,10 @@ class CreatorManagementController extends Controller
     {
         abort_unless($creator->isProvider(), 404);
 
-        $creator->loadCount(['providedContents', 'stockedContents']);
+        $creator->loadCount(['providedContents', 'stockedContents'])
+            ->load([
+                'priceOptions' => fn ($query) => $query->orderBy('price'),
+            ]);
 
         return Inertia::render('Admin/Creators/Edit', [
             'creator' => $this->creatorPayload($creator),
@@ -67,6 +77,7 @@ class CreatorManagementController extends Controller
             'name' => $request->string('name')->toString(),
             'email' => $request->string('email')->toString(),
             'role' => UserRole::Provider,
+            'apc_merchant_id' => $request->integer('apc_merchant_id'),
         ];
 
         if ($request->filled('password')) {
@@ -74,6 +85,12 @@ class CreatorManagementController extends Controller
         }
 
         $creator->update($attributes);
+
+        if ($request->filled('new_price_option')) {
+            $creator->priceOptions()->firstOrCreate([
+                'price' => $request->integer('new_price_option'),
+            ]);
+        }
 
         return to_route('admin.creators.index')->with('success', 'Creator account has been updated.');
     }
@@ -100,13 +117,26 @@ class CreatorManagementController extends Controller
      */
     private function creatorPayload(User $creator): array
     {
+        $generator = app(GeneratesProductCodes::class);
+
         return [
             'id' => $creator->id,
             'name' => $creator->name,
             'email' => $creator->email,
+            'apc_merchant_id' => $creator->apc_merchant_id,
             'provided_contents_count' => $creator->provided_contents_count ?? 0,
             'stocked_contents_count' => $creator->stocked_contents_count ?? 0,
             'created_at' => $creator->created_at?->toDateTimeString(),
+            'price_options' => $creator->priceOptions
+                ->sortBy('price')
+                ->values()
+                ->map(fn ($priceOption): array => [
+                    'id' => $priceOption->id,
+                    'price' => $priceOption->price,
+                    'formatted_price' => $priceOption->formatted_price,
+                    'product_code' => $generator->forProviderPrice($creator->apc_merchant_id, $priceOption->price),
+                ])
+                ->all(),
         ];
     }
 }

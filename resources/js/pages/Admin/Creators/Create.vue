@@ -8,6 +8,10 @@ import CreatorEditorForm from '@/components/admin/CreatorEditorForm.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
+defineProps<{
+    defaultPriceOptions: number[];
+}>();
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Creators',
@@ -37,7 +41,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </p>
 
                 <div class="mt-8">
-                    <CreatorEditorForm mode="create" />
+                    <CreatorEditorForm mode="create" :default-price-options="defaultPriceOptions" />
                 </div>
             </section>
         </div>

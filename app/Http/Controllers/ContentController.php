@@ -14,7 +14,7 @@ class ContentController extends Controller
     {
         $this->authorize('view', $content);
 
-        $content->load(['provider', 'genre', 'tags']);
+        $content->load(['provider', 'providerPriceOption.provider', 'genre', 'tags']);
 
         $purchase = null;
 
@@ -35,6 +35,7 @@ class ContentController extends Controller
                 'description' => $content->description,
                 'price' => $content->price,
                 'formatted_price' => $content->formatted_price,
+                'product_code' => $content->product_code,
                 'cover_url' => $content->cover_url,
                 'preview_urls' => $content->preview_urls,
                 'download_name' => $content->download_name,

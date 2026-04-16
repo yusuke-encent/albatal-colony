@@ -22,6 +22,7 @@ export type ContentCard = {
     slug: string;
     price: number;
     formatted_price: string;
+    product_code?: string | null;
     cover_url: string | null;
     preview_urls: string[];
     provider: ProviderSummary;
