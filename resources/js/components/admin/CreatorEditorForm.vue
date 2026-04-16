@@ -59,7 +59,12 @@ function submit(): void {
 
             <div class="space-y-2">
                 <Label for="email">Login Email</Label>
-                <Input id="email" v-model="form.email" type="email" placeholder="creator@example.com" />
+                <Input
+                    id="email"
+                    v-model="form.email"
+                    type="email"
+                    placeholder="creator@example.com"
+                />
                 <InputError :message="form.errors.email" />
             </div>
         </div>
@@ -68,9 +73,12 @@ function submit(): void {
             v-if="mode === 'create'"
             class="rounded-[1.5rem] border border-dashed border-amber-300 bg-amber-50/80 p-5"
         >
-            <p class="text-sm font-medium text-amber-950">Initial password is generated automatically.</p>
+            <p class="text-sm font-medium text-amber-950">
+                Initial password is generated automatically.
+            </p>
             <p class="mt-2 text-sm leading-6 text-amber-900">
-                After the account is created, the generated password will be shown once so you can share it securely.
+                After the account is created, the generated password will be
+                shown once so you can share it securely.
             </p>
         </div>
 
@@ -84,7 +92,8 @@ function submit(): void {
                     placeholder="Leave blank to keep the current password"
                 />
                 <p class="text-xs text-muted-foreground">
-                    Leave both password fields blank if you only want to update profile details.
+                    Leave both password fields blank if you only want to update
+                    profile details.
                 </p>
                 <InputError :message="form.errors.password" />
             </div>
@@ -106,16 +115,34 @@ function submit(): void {
             class="grid gap-4 rounded-[1.5rem] border border-black/5 bg-[#fbfaf8] p-5 md:grid-cols-3"
         >
             <div>
-                <p class="text-xs uppercase tracking-[0.24em] text-muted-foreground">Published</p>
-                <p class="mt-2 text-2xl font-semibold">{{ creator.provided_contents_count }}</p>
+                <p
+                    class="text-xs tracking-[0.24em] text-muted-foreground uppercase"
+                >
+                    Published
+                </p>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ creator.provided_contents_count }}
+                </p>
             </div>
             <div>
-                <p class="text-xs uppercase tracking-[0.24em] text-muted-foreground">Stocked</p>
-                <p class="mt-2 text-2xl font-semibold">{{ creator.stocked_contents_count }}</p>
+                <p
+                    class="text-xs tracking-[0.24em] text-muted-foreground uppercase"
+                >
+                    Stocked
+                </p>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ creator.stocked_contents_count }}
+                </p>
             </div>
             <div>
-                <p class="text-xs uppercase tracking-[0.24em] text-muted-foreground">Joined</p>
-                <p class="mt-2 text-sm font-medium">{{ creator.created_at || 'N/A' }}</p>
+                <p
+                    class="text-xs tracking-[0.24em] text-muted-foreground uppercase"
+                >
+                    Joined
+                </p>
+                <p class="mt-2 text-sm font-medium">
+                    {{ creator.created_at || 'N/A' }}
+                </p>
             </div>
         </div>
 

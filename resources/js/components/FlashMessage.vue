@@ -10,7 +10,10 @@ const generatedPassword = computed(() => page.props.flash?.generated_password);
 </script>
 
 <template>
-    <div v-if="success || error || generatedPassword" class="space-y-3 px-4 pt-4 md:px-6">
+    <div
+        v-if="success || error || generatedPassword"
+        class="space-y-3 px-4 pt-4 md:px-6"
+    >
         <div
             v-if="success"
             class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
@@ -31,7 +34,9 @@ const generatedPassword = computed(() => page.props.flash?.generated_password);
             <p class="mt-1 text-amber-800">
                 Share this securely with the creator. It is shown only once.
             </p>
-            <p class="mt-3 rounded-xl bg-white/80 px-3 py-2 font-mono text-[0.95rem] tracking-[0.08em]">
+            <p
+                class="mt-3 rounded-xl bg-white/80 px-3 py-2 font-mono text-[0.95rem] tracking-[0.08em]"
+            >
                 {{ generatedPassword }}
             </p>
         </div>
