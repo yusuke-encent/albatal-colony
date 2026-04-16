@@ -190,7 +190,9 @@ class ManagedContentController extends Controller
                         'id' => $priceOption->id,
                         'price' => $priceOption->price,
                         'formatted_price' => $priceOption->formatted_price,
-                        'product_code' => $generator->forProviderPrice($provider->apc_merchant_id, $priceOption->price),
+                        'product_code' => $provider->apc_merchant_id === null
+                            ? null
+                            : $generator->forProviderPrice($provider->apc_merchant_id, $priceOption->price),
                     ])
                     ->all(),
             ])->all();

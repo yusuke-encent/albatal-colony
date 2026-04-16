@@ -18,7 +18,7 @@ defineProps<{
             id: number;
             price: number;
             formatted_price: string;
-            product_code: string;
+            product_code: string | null;
         }>;
     };
 }>();

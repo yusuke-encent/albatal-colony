@@ -20,7 +20,7 @@ const props = defineProps<{
             id: number;
             price: number;
             formatted_price: string;
-            product_code: string;
+            product_code: string | null;
         }>;
     }>;
     genres: Array<{
@@ -200,7 +200,11 @@ function submit(): void {
                         :key="priceOption.id"
                         :value="priceOption.id.toString()"
                     >
-                        {{ priceOption.formatted_price }} / {{ priceOption.product_code }}
+                        {{
+                            priceOption.product_code
+                                ? `${priceOption.formatted_price} / ${priceOption.product_code}`
+                                : priceOption.formatted_price
+                        }}
                     </option>
                 </select>
                 <p v-if="mode === 'create'" class="text-xs text-muted-foreground">
@@ -244,7 +248,10 @@ function submit(): void {
                             Provider-defined selling price
                         </p>
                     </div>
-                    <div class="rounded-full border border-black/10 px-4 py-2 text-sm font-medium">
+                    <div
+                        v-if="selectedPriceOption.product_code"
+                        class="rounded-full border border-black/10 px-4 py-2 text-sm font-medium"
+                    >
                         {{ selectedPriceOption.product_code }}
                     </div>
                 </div>

@@ -169,6 +169,20 @@ it('stores partially configured uploads as stocked content', function () {
         ->and($stockedContent->price)->toBeNull();
 });
 
+it('renders the content create screen even when a creator has no apc merchant id yet', function () {
+    $admin = User::factory()->admin()->create();
+    $provider = User::factory()->provider()->create();
+
+    $provider->forceFill([
+        'apc_merchant_id' => null,
+    ])->saveQuietly();
+
+    $response = $this->actingAs($admin)->get('/admin/contents/create');
+
+    $response->assertSuccessful();
+    $response->assertSee($provider->name);
+});
+
 it('rejects price options from another creator', function () {
     fakeMarketplaceDisks();
 

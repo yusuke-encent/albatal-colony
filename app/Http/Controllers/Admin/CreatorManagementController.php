@@ -134,7 +134,9 @@ class CreatorManagementController extends Controller
                     'id' => $priceOption->id,
                     'price' => $priceOption->price,
                     'formatted_price' => $priceOption->formatted_price,
-                    'product_code' => $generator->forProviderPrice($creator->apc_merchant_id, $priceOption->price),
+                    'product_code' => $creator->apc_merchant_id === null
+                        ? null
+                        : $generator->forProviderPrice($creator->apc_merchant_id, $priceOption->price),
                 ])
                 ->all(),
         ];

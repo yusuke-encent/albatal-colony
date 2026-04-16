@@ -6,7 +6,6 @@ use App\Services\Marketplace\GeneratesProductCodes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use LogicException;
 
 class ProviderPriceOption extends Model
 {
@@ -35,16 +34,16 @@ class ProviderPriceOption extends Model
     }
 
     /**
-     * @return Attribute<string, never>
+     * @return Attribute<string|null, never>
      */
     protected function productCode(): Attribute
     {
-        return Attribute::get(function (): string {
+        return Attribute::get(function (): ?string {
             $merchantId = $this->provider?->apc_merchant_id
                 ?? $this->provider()->value('apc_merchant_id');
 
             if ($merchantId === null) {
-                throw new LogicException('Provider price options require an apc_merchant_id to generate product codes.');
+                return null;
             }
 
             return app(GeneratesProductCodes::class)->forProviderPrice(

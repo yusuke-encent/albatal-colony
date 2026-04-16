@@ -25,7 +25,7 @@ const props = defineProps<{
             id: number;
             price: number;
             formatted_price: string;
-            product_code: string;
+            product_code: string | null;
         }>;
     };
 }>();
@@ -232,7 +232,7 @@ function submit(): void {
                         Product Code
                     </p>
                     <p class="mt-1 font-mono text-sm text-[#241914]">
-                        {{ priceOption.product_code }}
+                        {{ priceOption.product_code || 'Not available yet' }}
                     </p>
                 </div>
             </div>
