@@ -27,6 +27,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <p class="mt-2 text-sm text-muted-foreground">
                     Creator accounts are stored as `provider` users and can be assigned to published or stocked content.
                 </p>
+                <p class="mt-2 text-sm text-muted-foreground">
+                    A secure initial password is generated automatically when the account is created.
+                </p>
 
                 <div class="mt-8">
                     <CreatorEditorForm mode="create" />

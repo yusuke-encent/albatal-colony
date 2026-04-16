@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateCreatorRequest;
 use App\Models\User;
 use App\Support\UserRole;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,15 +33,19 @@ class CreatorManagementController extends Controller
 
     public function store(StoreCreatorRequest $request): RedirectResponse
     {
+        $generatedPassword = Str::password(24);
+
         User::create([
             'name' => $request->string('name')->toString(),
             'email' => $request->string('email')->toString(),
             'role' => UserRole::Provider,
             'email_verified_at' => now(),
-            'password' => $request->string('password')->toString(),
+            'password' => $generatedPassword,
         ]);
 
-        return to_route('admin.creators.index')->with('success', 'Creator account has been created.');
+        return to_route('admin.creators.index')
+            ->with('success', 'Creator account has been created.')
+            ->with('generated_password', $generatedPassword);
     }
 
     public function edit(User $creator): Response

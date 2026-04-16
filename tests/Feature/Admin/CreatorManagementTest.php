@@ -31,17 +31,20 @@ it('allows admins to create creator accounts', function () {
     $response = $this->actingAs($admin)->post('/admin/creators', [
         'name' => 'Creator User',
         'email' => 'creator@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
     ]);
 
     $response->assertRedirect('/admin/creators');
     $response->assertSessionHas('success', 'Creator account has been created.');
+    $response->assertSessionHas('generated_password');
 
     $creator = User::query()->where('email', 'creator@example.com')->first();
+    $generatedPassword = session('generated_password');
 
     expect($creator)->not->toBeNull()
-        ->and($creator->role)->toBe(UserRole::Provider);
+        ->and($creator->role)->toBe(UserRole::Provider)
+        ->and($generatedPassword)->toBeString()
+        ->and($generatedPassword)->not->toBe('')
+        ->and(Hash::check($generatedPassword, $creator->password))->toBeTrue();
 });
 
 it('allows admins to update creator account details', function () {

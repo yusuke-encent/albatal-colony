@@ -64,18 +64,26 @@ function submit(): void {
             </div>
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div
+            v-if="mode === 'create'"
+            class="rounded-[1.5rem] border border-dashed border-amber-300 bg-amber-50/80 p-5"
+        >
+            <p class="text-sm font-medium text-amber-950">Initial password is generated automatically.</p>
+            <p class="mt-2 text-sm leading-6 text-amber-900">
+                After the account is created, the generated password will be shown once so you can share it securely.
+            </p>
+        </div>
+
+        <div v-else class="grid gap-6 lg:grid-cols-2">
             <div class="space-y-2">
-                <Label for="password">
-                    {{ mode === 'create' ? 'Initial Password' : 'New Password' }}
-                </Label>
+                <Label for="password">New Password</Label>
                 <Input
                     id="password"
                     v-model="form.password"
                     type="password"
-                    :placeholder="mode === 'create' ? 'Choose a password' : 'Leave blank to keep the current password'"
+                    placeholder="Leave blank to keep the current password"
                 />
-                <p v-if="mode === 'edit'" class="text-xs text-muted-foreground">
+                <p class="text-xs text-muted-foreground">
                     Leave both password fields blank if you only want to update profile details.
                 </p>
                 <InputError :message="form.errors.password" />

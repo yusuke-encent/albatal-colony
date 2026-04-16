@@ -17,6 +17,7 @@ export type Auth = {
 export type Flash = {
     success?: string | null;
     error?: string | null;
+    generated_password?: string | null;
 };
 
 export type TwoFactorConfigContent = {
