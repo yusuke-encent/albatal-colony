@@ -61,7 +61,7 @@ const user = computed(() => page.props.auth.user);
             <FlashMessage />
 
             <section class="relative isolate overflow-hidden rounded-[2.5rem] border border-white/30 bg-[#120d0b] px-6 py-10 shadow-[0_32px_120px_rgba(36,25,20,0.24)] sm:px-8 lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-8 lg:px-10">
-                <div class="absolute inset-0">
+                <div class="absolute inset-0 overflow-hidden rounded-[inherit]">
                     <video
                         v-if="heroVideoUrl"
                         :src="heroVideoUrl"
@@ -70,11 +70,11 @@ const user = computed(() => page.props.auth.user);
                         loop
                         playsinline
                         preload="metadata"
-                        class="h-full w-full object-cover opacity-60"
+                        class="h-full w-full rounded-[inherit] object-cover opacity-60"
                     />
-                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(209,109,79,0.4),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(76,134,255,0.22),_transparent_34%),linear-gradient(135deg,_rgba(11,9,8,0.55)_0%,_rgba(18,13,11,0.74)_48%,_rgba(11,9,8,0.9)_100%)]" />
-                    <div class="crt-scanlines pointer-events-none absolute inset-0 opacity-70" />
-                    <div class="crt-noise pointer-events-none absolute inset-0 opacity-35" />
+                    <div class="absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_top_left,_rgba(209,109,79,0.4),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(76,134,255,0.22),_transparent_34%),linear-gradient(135deg,_rgba(11,9,8,0.55)_0%,_rgba(18,13,11,0.74)_48%,_rgba(11,9,8,0.9)_100%)]" />
+                    <div class="crt-scanlines pointer-events-none absolute inset-0 rounded-[inherit] opacity-70" />
+                    <div class="crt-noise pointer-events-none absolute inset-0 rounded-[inherit] opacity-35" />
                 </div>
 
                 <div class="relative z-10">

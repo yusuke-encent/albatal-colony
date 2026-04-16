@@ -9,6 +9,7 @@ it('renders the homepage hero video without controls and with crt overlay stylin
         ->toContain('muted')
         ->toContain('loop')
         ->toContain('playsinline')
+        ->toContain('rounded-[inherit]')
         ->toContain('crt-noise')
         ->toContain('crt-scanlines')
         ->not->toContain('controls');
