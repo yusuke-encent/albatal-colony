@@ -5,10 +5,13 @@ it('renders the homepage hero video without controls and with crt overlay stylin
 
     expect($source)
         ->toContain(':src="heroVideoUrl"')
+        ->toContain('IntersectionObserver')
+        ->toContain('shouldLoadHeroVideo && heroVideoUrl')
         ->toContain('autoplay')
         ->toContain('muted')
         ->toContain('loop')
         ->toContain('playsinline')
+        ->toContain('preload="none"')
         ->toContain('rounded-[inherit]')
         ->toContain('crt-noise')
         ->toContain('crt-scanlines')

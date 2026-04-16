@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import FlashMessage from '@/components/FlashMessage.vue';
 import type { ContentCard } from '@/types/marketplace';
 
-defineProps<{
+const props = defineProps<{
     featuredContents: ContentCard[];
     genres: Array<{
         id: number;
@@ -18,6 +18,57 @@ defineProps<{
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const heroSection = ref<HTMLElement | null>(null);
+const shouldLoadHeroVideo = ref(false);
+
+let heroVideoObserver: IntersectionObserver | null = null;
+let heroVideoLoadTimeout: number | null = null;
+
+const queueHeroVideoLoad = (): void => {
+    if (shouldLoadHeroVideo.value) {
+        return;
+    }
+
+    heroVideoLoadTimeout = window.setTimeout(() => {
+        shouldLoadHeroVideo.value = true;
+        heroVideoLoadTimeout = null;
+    }, 180);
+};
+
+onMounted((): void => {
+    if (props.heroVideoUrl === null) {
+        return;
+    }
+
+    if (heroSection.value === null || !('IntersectionObserver' in window)) {
+        queueHeroVideoLoad();
+
+        return;
+    }
+
+    heroVideoObserver = new IntersectionObserver(
+        (entries): void => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                queueHeroVideoLoad();
+                heroVideoObserver?.disconnect();
+                heroVideoObserver = null;
+            }
+        },
+        {
+            rootMargin: '160px 0px',
+        },
+    );
+
+    heroVideoObserver.observe(heroSection.value);
+});
+
+onBeforeUnmount((): void => {
+    heroVideoObserver?.disconnect();
+
+    if (heroVideoLoadTimeout !== null) {
+        window.clearTimeout(heroVideoLoadTimeout);
+    }
+});
 </script>
 
 <template>
@@ -60,16 +111,16 @@ const user = computed(() => page.props.auth.user);
         <main class="mx-auto max-w-7xl px-6 pb-20 lg:px-8">
             <FlashMessage />
 
-            <section class="relative isolate overflow-hidden rounded-[2.5rem] border border-white/30 bg-[#120d0b] px-6 py-10 shadow-[0_32px_120px_rgba(36,25,20,0.24)] sm:px-8 lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-8 lg:px-10">
+            <section ref="heroSection" class="relative isolate overflow-hidden rounded-[2.5rem] border border-white/30 bg-[#120d0b] px-6 py-10 shadow-[0_32px_120px_rgba(36,25,20,0.24)] sm:px-8 lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-8 lg:px-10">
                 <div class="absolute inset-0 overflow-hidden rounded-[inherit]">
                     <video
-                        v-if="heroVideoUrl"
+                        v-if="shouldLoadHeroVideo && heroVideoUrl"
                         :src="heroVideoUrl"
                         autoplay
                         muted
                         loop
                         playsinline
-                        preload="metadata"
+                        preload="none"
                         class="h-full w-full rounded-[inherit] object-cover opacity-60"
                     />
                     <div class="absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_top_left,_rgba(209,109,79,0.4),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(76,134,255,0.22),_transparent_34%),linear-gradient(135deg,_rgba(11,9,8,0.55)_0%,_rgba(18,13,11,0.74)_48%,_rgba(11,9,8,0.9)_100%)]" />
