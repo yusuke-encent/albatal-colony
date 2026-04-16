@@ -3,6 +3,7 @@
 use App\Models\Content;
 use App\Models\Genre;
 use App\Models\PaymentSession;
+use App\Models\ProviderPriceOption;
 use App\Models\Purchase;
 use App\Models\StockedContent;
 use App\Models\Tag;
@@ -11,6 +12,14 @@ use App\Support\PaymentSessionStatus;
 use App\Support\PurchaseStatus;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+
+function createMarketplacePriceOption(User $provider, int $price = 3000, string $productCode = 'MARKET-3000'): ProviderPriceOption
+{
+    return $provider->priceOptions()->create([
+        'price' => $price,
+        'product_code' => $productCode,
+    ]);
+}
 
 function fakeMarketplaceDisks(): void
 {
@@ -55,7 +64,7 @@ it('allows admins to create content and blocks providers from the admin panel', 
 
     $admin = User::factory()->admin()->create();
     $provider = User::factory()->provider()->create();
-    $providerPriceOption = $provider->priceOptions()->where('price', 3000)->firstOrFail();
+    $providerPriceOption = createMarketplacePriceOption($provider);
     $genre = Genre::factory()->create([
         'name' => 'Other',
         'slug' => 'other',
@@ -189,7 +198,7 @@ it('rejects price options from another creator', function () {
     $admin = User::factory()->admin()->create();
     $provider = User::factory()->provider()->create();
     $otherProvider = User::factory()->provider()->create();
-    $invalidPriceOption = $otherProvider->priceOptions()->where('price', 3000)->firstOrFail();
+    $invalidPriceOption = createMarketplacePriceOption($otherProvider);
     $genre = Genre::factory()->create();
 
     $response = $this->actingAs($admin)

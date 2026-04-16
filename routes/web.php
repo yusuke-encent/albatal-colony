@@ -77,6 +77,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('creators', [CreatorManagementController::class, 'store'])->name('creators.store');
             Route::get('creators/{creator}/edit', [CreatorManagementController::class, 'edit'])->name('creators.edit');
             Route::put('creators/{creator}', [CreatorManagementController::class, 'update'])->name('creators.update');
+            Route::post('creators/{creator}/price-options', [CreatorManagementController::class, 'storePriceOption'])->name('creators.price-options.store');
+            Route::patch('creators/{creator}/price-options/{priceOption}', [CreatorManagementController::class, 'updatePriceOption'])->name('creators.price-options.update');
+            Route::delete('creators/{creator}/price-options/{priceOption}', [CreatorManagementController::class, 'destroyPriceOption'])->name('creators.price-options.destroy');
             Route::delete('creators/{creator}', [CreatorManagementController::class, 'destroy'])->name('creators.destroy');
             Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
             Route::post('users', [UserManagementController::class, 'store'])->name('users.store');

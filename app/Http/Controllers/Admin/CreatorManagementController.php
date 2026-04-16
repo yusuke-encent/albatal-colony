@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCreatorRequest;
+use App\Http\Requests\Admin\StoreProviderPriceOptionRequest;
 use App\Http\Requests\Admin\UpdateCreatorRequest;
+use App\Http\Requests\Admin\UpdateProviderPriceOptionRequest;
+use App\Models\ProviderPriceOption;
 use App\Models\User;
-use App\Services\Marketplace\GeneratesProductCodes;
-use App\Services\Marketplace\EnsuresProviderPriceOptions;
 use App\Support\UserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -33,9 +34,7 @@ class CreatorManagementController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/Creators/Create', [
-            'defaultPriceOptions' => app(EnsuresProviderPriceOptions::class)->defaultPrices(),
-        ]);
+        return Inertia::render('Admin/Creators/Create');
     }
 
     public function store(StoreCreatorRequest $request): RedirectResponse
@@ -86,13 +85,49 @@ class CreatorManagementController extends Controller
 
         $creator->update($attributes);
 
-        if ($request->filled('new_price_option')) {
-            $creator->priceOptions()->firstOrCreate([
-                'price' => $request->integer('new_price_option'),
-            ]);
+        return to_route('admin.creators.index')->with('success', 'Creator account has been updated.');
+    }
+
+    public function storePriceOption(StoreProviderPriceOptionRequest $request, User $creator): RedirectResponse
+    {
+        abort_unless($creator->isProvider(), 404);
+
+        $creator->priceOptions()->create([
+            'price' => $request->integer('price'),
+            'product_code' => $request->string('product_code')->toString(),
+        ]);
+
+        return back()->with('success', 'Creator price option has been added.');
+    }
+
+    public function updatePriceOption(
+        UpdateProviderPriceOptionRequest $request,
+        User $creator,
+        ProviderPriceOption $priceOption,
+    ): RedirectResponse {
+        abort_unless($creator->isProvider(), 404);
+        abort_unless($priceOption->provider_id === $creator->id, 404);
+
+        $priceOption->update([
+            'price' => $request->integer('price'),
+            'product_code' => $request->string('product_code')->toString(),
+        ]);
+
+        return back()->with('success', 'Creator price option has been updated.');
+    }
+
+    public function destroyPriceOption(User $creator, ProviderPriceOption $priceOption): RedirectResponse
+    {
+        abort_unless($creator->isProvider(), 404);
+        abort_unless($priceOption->provider_id === $creator->id, 404);
+
+        if ($priceOption->contents()->exists() || $priceOption->stockedContents()->exists()) {
+            return back()->with('error', 'Reassign or remove linked content before deleting this price option.');
         }
 
-        return to_route('admin.creators.index')->with('success', 'Creator account has been updated.');
+        $priceOption->delete();
+
+        return back()->with('success', 'Creator price option has been deleted.');
     }
 
     public function destroy(User $creator): RedirectResponse
@@ -117,8 +152,6 @@ class CreatorManagementController extends Controller
      */
     private function creatorPayload(User $creator): array
     {
-        $generator = app(GeneratesProductCodes::class);
-
         return [
             'id' => $creator->id,
             'name' => $creator->name,
@@ -134,9 +167,7 @@ class CreatorManagementController extends Controller
                     'id' => $priceOption->id,
                     'price' => $priceOption->price,
                     'formatted_price' => $priceOption->formatted_price,
-                    'product_code' => $creator->apc_merchant_id === null
-                        ? null
-                        : $generator->forProviderPrice($creator->apc_merchant_id, $priceOption->price),
+                    'product_code' => $priceOption->product_code,
                 ])
                 ->all(),
         ];

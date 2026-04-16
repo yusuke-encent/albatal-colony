@@ -8,10 +8,6 @@ import CreatorEditorForm from '@/components/admin/CreatorEditorForm.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
-defineProps<{
-    defaultPriceOptions: number[];
-}>();
-
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Creators',
@@ -39,9 +35,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                     A secure initial password is generated automatically when
                     the account is created.
                 </p>
+                <p class="mt-2 text-sm text-muted-foreground">
+                    Price and product code pairs can be added later from the
+                    creator edit screen.
+                </p>
 
                 <div class="mt-8">
-                    <CreatorEditorForm mode="create" :default-price-options="defaultPriceOptions" />
+                    <CreatorEditorForm mode="create" />
                 </div>
             </section>
         </div>

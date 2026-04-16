@@ -50,11 +50,25 @@ class User extends Authenticatable
                 return;
             }
 
-            if (! $user->wasRecentlyCreated && ! $user->wasChanged('role') && $user->apc_merchant_id !== null) {
+            $priceOptions = app(EnsuresProviderPriceOptions::class);
+
+            if ($user->wasRecentlyCreated) {
+                if ($user->apc_merchant_id === null) {
+                    $priceOptions->ensureMerchantId($user);
+                }
+
                 return;
             }
 
-            app(EnsuresProviderPriceOptions::class)->ensureDefaultsFor($user);
+            if ($user->wasChanged('role')) {
+                $priceOptions->ensureDefaultsFor($user);
+
+                return;
+            }
+
+            if ($user->apc_merchant_id === null) {
+                $priceOptions->ensureMerchantId($user);
+            }
         });
     }
 

@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use App\Services\Marketplace\GeneratesProductCodes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProviderPriceOption extends Model
 {
@@ -15,6 +15,7 @@ class ProviderPriceOption extends Model
     protected $fillable = [
         'provider_id',
         'price',
+        'product_code',
     ];
 
     /**
@@ -26,30 +27,26 @@ class ProviderPriceOption extends Model
     }
 
     /**
+     * @return HasMany<Content, $this>
+     */
+    public function contents(): HasMany
+    {
+        return $this->hasMany(Content::class);
+    }
+
+    /**
+     * @return HasMany<StockedContent, $this>
+     */
+    public function stockedContents(): HasMany
+    {
+        return $this->hasMany(StockedContent::class);
+    }
+
+    /**
      * @return Attribute<string, never>
      */
     protected function formattedPrice(): Attribute
     {
         return Attribute::get(fn (): string => number_format($this->price).' '.config('marketplace.currency'));
-    }
-
-    /**
-     * @return Attribute<string|null, never>
-     */
-    protected function productCode(): Attribute
-    {
-        return Attribute::get(function (): ?string {
-            $merchantId = $this->provider?->apc_merchant_id
-                ?? $this->provider()->value('apc_merchant_id');
-
-            if ($merchantId === null) {
-                return null;
-            }
-
-            return app(GeneratesProductCodes::class)->forProviderPrice(
-                merchantId: $merchantId,
-                price: $this->price,
-            );
-        });
     }
 }

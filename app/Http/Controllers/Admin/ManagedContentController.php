@@ -11,7 +11,6 @@ use App\Models\ProviderPriceOption;
 use App\Models\StockedContent;
 use App\Models\Tag;
 use App\Models\User;
-use App\Services\Marketplace\GeneratesProductCodes;
 use App\Support\UserRole;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
@@ -171,8 +170,6 @@ class ManagedContentController extends Controller
      */
     private function providers(): array
     {
-        $generator = app(GeneratesProductCodes::class);
-
         return User::query()
             ->where('role', UserRole::Provider)
             ->with([
@@ -190,9 +187,7 @@ class ManagedContentController extends Controller
                         'id' => $priceOption->id,
                         'price' => $priceOption->price,
                         'formatted_price' => $priceOption->formatted_price,
-                        'product_code' => $provider->apc_merchant_id === null
-                            ? null
-                            : $generator->forProviderPrice($provider->apc_merchant_id, $priceOption->price),
+                        'product_code' => $priceOption->product_code,
                     ])
                     ->all(),
             ])->all();

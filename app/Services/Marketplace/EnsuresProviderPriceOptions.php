@@ -22,20 +22,19 @@ class EnsuresProviderPriceOptions
 
         $this->ensureMerchantId($provider);
 
-        $timestamp = now();
+        $generator = app(GeneratesProductCodes::class);
 
-        ProviderPriceOption::query()->upsert(
-            collect($prices)
-                ->map(fn (int $price): array => [
+        foreach ($prices as $price) {
+            ProviderPriceOption::query()->firstOrCreate(
+                [
                     'provider_id' => $provider->id,
                     'price' => $price,
-                    'created_at' => $timestamp,
-                    'updated_at' => $timestamp,
-                ])
-                ->all(),
-            ['provider_id', 'price'],
-            ['updated_at'],
-        );
+                ],
+                [
+                    'product_code' => $generator->forProviderPrice($provider->apc_merchant_id, $price),
+                ],
+            );
+        }
     }
 
     public function ensureMerchantId(User $provider): void

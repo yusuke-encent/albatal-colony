@@ -33,14 +33,6 @@ class UpdateCreatorRequest extends FormRequest
                 Rule::unique('users', 'apc_merchant_id')->ignore($creatorId),
             ],
             'password' => ['nullable', 'string', Password::default(), 'confirmed'],
-            'new_price_option' => [
-                'nullable',
-                'integer',
-                'min:1',
-                Rule::unique('provider_price_options', 'price')->where(
-                    fn ($query) => $query->where('provider_id', $creatorId),
-                ),
-            ],
         ];
     }
 
@@ -56,8 +48,6 @@ class UpdateCreatorRequest extends FormRequest
             'apc_merchant_id.required' => 'Please enter an APC merchant ID.',
             'apc_merchant_id.unique' => 'That APC merchant ID is already in use.',
             'password.confirmed' => 'Password confirmation does not match.',
-            'new_price_option.integer' => 'Please enter a valid numeric price.',
-            'new_price_option.unique' => 'That price already exists for this creator.',
         ];
     }
 }
