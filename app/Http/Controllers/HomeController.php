@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Content;
 use App\Models\Genre;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +45,9 @@ class HomeController extends Controller
         return Inertia::render('Welcome', [
             'featuredContents' => $featuredContents,
             'genres' => $genres,
+            'heroVideoUrl' => Storage::disk('public')->exists('top.mp4')
+                ? Storage::disk('public')->url('top.mp4')
+                : null,
         ]);
     }
 

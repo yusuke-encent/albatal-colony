@@ -13,6 +13,7 @@ defineProps<{
         description: string | null;
         contents: ContentCard[];
     }>;
+    heroVideoUrl: string | null;
 }>();
 
 const page = usePage();
@@ -59,39 +60,55 @@ const user = computed(() => page.props.auth.user);
         <main class="mx-auto max-w-7xl px-6 pb-20 lg:px-8">
             <FlashMessage />
 
-            <section class="grid gap-8 py-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-                <div>
-                    <p class="font-mono text-xs uppercase tracking-[0.4em] text-[#d16d4f]">
+            <section class="relative isolate overflow-hidden rounded-[2.5rem] border border-white/30 bg-[#120d0b] px-6 py-10 shadow-[0_32px_120px_rgba(36,25,20,0.24)] sm:px-8 lg:grid lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-8 lg:px-10">
+                <div class="absolute inset-0">
+                    <video
+                        v-if="heroVideoUrl"
+                        :src="heroVideoUrl"
+                        autoplay
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                        class="h-full w-full object-cover opacity-60"
+                    />
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(209,109,79,0.4),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(76,134,255,0.22),_transparent_34%),linear-gradient(135deg,_rgba(11,9,8,0.55)_0%,_rgba(18,13,11,0.74)_48%,_rgba(11,9,8,0.9)_100%)]" />
+                    <div class="crt-scanlines pointer-events-none absolute inset-0 opacity-70" />
+                    <div class="crt-noise pointer-events-none absolute inset-0 opacity-35" />
+                </div>
+
+                <div class="relative z-10">
+                    <p class="font-mono text-xs uppercase tracking-[0.4em] text-[#f2aa8d]">
                         Publish Worldwide
                     </p>
-                    <h2 class="mt-4 max-w-3xl font-serif text-5xl leading-tight text-[#241914] md:text-7xl">
+                    <h2 class="mt-4 max-w-3xl font-serif text-5xl leading-tight text-[#fff6ea] md:text-7xl">
                         Digital content built for audiences worldwide.
                     </h2>
-                    <p class="mt-6 max-w-2xl text-base leading-8 text-[#5f453b] md:text-lg">
+                    <p class="mt-6 max-w-2xl text-base leading-8 text-[#f8e8d8]/88 md:text-lg">
                         Sell illustrations, videos, and asset bundles from independent creators in one place.
                         Admins manage product operations while international buyers complete checkout and download with ease.
                     </p>
                     <div class="mt-8 flex flex-wrap gap-3">
                         <Link
                             href="/library"
-                            class="rounded-full bg-[#d16d4f] px-6 py-3 text-sm font-medium text-white"
+                            class="rounded-full bg-[#d16d4f] px-6 py-3 text-sm font-medium text-white shadow-[0_14px_40px_rgba(209,109,79,0.4)]"
                         >
                             Purchase Library
                         </Link>
                         <Link
                             href="/dashboard"
-                            class="rounded-full border border-[#241914]/15 bg-white/70 px-6 py-3 text-sm font-medium text-[#241914]"
+                            class="rounded-full border border-white/25 bg-white/12 px-6 py-3 text-sm font-medium text-[#fff6ea] backdrop-blur"
                         >
                             Seller & Admin Hub
                         </Link>
                     </div>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="relative z-10 mt-8 grid gap-4 sm:grid-cols-2 lg:mt-0">
                     <article
                         v-for="content in featuredContents"
                         :key="content.id"
-                        class="overflow-hidden rounded-[2rem] bg-white/80 shadow-[0_24px_80px_rgba(36,25,20,0.12)] backdrop-blur"
+                        class="overflow-hidden rounded-[2rem] border border-white/12 bg-white/12 shadow-[0_24px_80px_rgba(8,6,5,0.32)] backdrop-blur-md"
                     >
                         <img
                             :src="content.cover_url || content.preview_urls[0]"
@@ -99,25 +116,25 @@ const user = computed(() => page.props.auth.user);
                             class="h-56 w-full object-cover"
                         />
                         <div class="space-y-3 p-5">
-                            <div class="flex items-center justify-between text-xs uppercase tracking-[0.25em] text-[#8d5b4c]">
+                            <div class="flex items-center justify-between text-xs uppercase tracking-[0.25em] text-[#f1b59d]/78">
                                 <span>{{ content.genre.name }}</span>
                                 <span>{{ content.sku }}</span>
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-[#241914]">
+                                <h3 class="text-lg font-semibold text-[#fff6ea]">
                                     {{ content.title }}
                                 </h3>
-                                <p class="mt-1 text-sm text-[#5f453b]">
+                                <p class="mt-1 text-sm text-[#f8e8d8]/76">
                                     {{ content.provider.name }}
                                 </p>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-sm font-semibold text-[#241914]">
+                                <span class="text-sm font-semibold text-[#fff6ea]">
                                     {{ content.formatted_price }}
                                 </span>
                                 <Link
                                     :href="`/contents/${content.slug}`"
-                                    class="rounded-full border border-[#241914]/15 px-4 py-2 text-sm text-[#241914]"
+                                    class="rounded-full border border-white/20 px-4 py-2 text-sm text-[#fff6ea]"
                                 >
                                     View
                                 </Link>
@@ -198,3 +215,72 @@ const user = computed(() => page.props.auth.user);
         </main>
     </div>
 </template>
+
+<style scoped>
+.crt-noise {
+    background-image:
+        radial-gradient(circle at 20% 20%, rgb(255 255 255 / 0.2) 0, transparent 18%),
+        radial-gradient(circle at 78% 32%, rgb(255 255 255 / 0.16) 0, transparent 20%),
+        radial-gradient(circle at 52% 78%, rgb(255 255 255 / 0.14) 0, transparent 24%),
+        repeating-linear-gradient(0deg, rgb(255 255 255 / 0.08) 0 1px, transparent 1px 3px);
+    background-size: 24rem 16rem, 22rem 14rem, 20rem 14rem, 100% 100%;
+    animation: crt-noise-shift 220ms steps(2) infinite, crt-flicker 6s linear infinite;
+    mix-blend-mode: soft-light;
+}
+
+.crt-scanlines {
+    background-image:
+        linear-gradient(180deg, rgb(255 255 255 / 0.12) 0, rgb(255 255 255 / 0.02) 30%, rgb(0 0 0 / 0.28) 100%),
+        repeating-linear-gradient(0deg, rgb(255 255 255 / 0.05) 0 1px, rgb(0 0 0 / 0.18) 1px 3px);
+    mix-blend-mode: screen;
+}
+
+@keyframes crt-noise-shift {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+
+    25% {
+        transform: translate3d(-1%, 1%, 0);
+    }
+
+    50% {
+        transform: translate3d(1%, -1%, 0);
+    }
+
+    75% {
+        transform: translate3d(0.5%, 1%, 0);
+    }
+
+    100% {
+        transform: translate3d(-0.5%, -1%, 0);
+    }
+}
+
+@keyframes crt-flicker {
+    0%,
+    100% {
+        opacity: 0.32;
+    }
+
+    10% {
+        opacity: 0.38;
+    }
+
+    20% {
+        opacity: 0.28;
+    }
+
+    35% {
+        opacity: 0.44;
+    }
+
+    60% {
+        opacity: 0.3;
+    }
+
+    80% {
+        opacity: 0.4;
+    }
+}
+</style>
