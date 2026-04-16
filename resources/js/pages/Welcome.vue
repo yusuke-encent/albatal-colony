@@ -31,7 +31,7 @@ const user = computed(() => page.props.auth.user);
                     Jp Con Colony
                 </p>
                 <h1 class="mt-2 font-serif text-2xl text-[#241914]">
-                    Japanese Creator Marketplace
+                    Creator Marketplace
                 </h1>
             </div>
             <nav class="flex items-center gap-3 text-sm">
@@ -62,13 +62,13 @@ const user = computed(() => page.props.auth.user);
             <section class="grid gap-8 py-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
                 <div>
                     <p class="font-mono text-xs uppercase tracking-[0.4em] text-[#d16d4f]">
-                        Japan to Global
+                        Publish Worldwide
                     </p>
                     <h2 class="mt-4 max-w-3xl font-serif text-5xl leading-tight text-[#241914] md:text-7xl">
-                        Japanese digital content for audiences worldwide.
+                        Digital content built for audiences worldwide.
                     </h2>
                     <p class="mt-6 max-w-2xl text-base leading-8 text-[#5f453b] md:text-lg">
-                        Sell illustrations, videos, and asset bundles from Japanese creators in one place.
+                        Sell illustrations, videos, and asset bundles from independent creators in one place.
                         Admins manage product operations while international buyers complete checkout and download with ease.
                     </p>
                     <div class="mt-8 flex flex-wrap gap-3">
@@ -142,7 +142,7 @@ const user = computed(() => page.props.auth.user);
                                 {{ genre.name }}
                             </h3>
                             <p class="mt-2 text-sm text-[#5f453b]">
-                                {{ genre.description || 'Discover the latest Japanese releases in this genre.' }}
+                                {{ genre.description || 'Discover the latest releases in this genre.' }}
                             </p>
                         </div>
                         <p class="text-sm text-[#5f453b]">

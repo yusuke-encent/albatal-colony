@@ -39,7 +39,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </p>
                 <h1 class="mt-3 font-serif text-4xl text-[#241914]">Your Library</h1>
                 <p class="mt-3 max-w-2xl text-sm leading-8 text-[#5f453b]">
-                    Re-download Japanese content you have already purchased.
+                    Re-download content you have already purchased.
                 </p>
             </section>
 

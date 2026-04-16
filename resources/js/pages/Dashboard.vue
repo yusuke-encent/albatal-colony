@@ -52,7 +52,7 @@ const roleLabel = computed(() => {
                 </p>
                 <h1 class="mt-3 font-serif text-4xl">Marketplace dashboard</h1>
                 <p class="mt-3 max-w-2xl text-sm leading-7 text-white/80">
-                    Track key metrics by role and monitor the latest global sales of Japanese content.
+                    Track key metrics by role and monitor the latest global sales across your catalog.
                 </p>
                 <div class="mt-6 flex flex-wrap gap-3">
                     <Link href="/" class="rounded-full bg-white px-5 py-2.5 text-sm font-medium text-[#241914]">

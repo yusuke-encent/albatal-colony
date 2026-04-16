@@ -58,9 +58,9 @@ class DatabaseSeeder extends Seeder
         );
 
         $genres = collect([
-            ['name' => 'Image', 'slug' => 'image', 'description' => 'For Japanese illustrations, photography, and artwork.'],
-            ['name' => 'Video', 'slug' => 'video', 'description' => 'For Japanese motion graphics and video releases.'],
-            ['name' => 'Other', 'slug' => 'other', 'description' => 'For ZIP deliveries and mixed Japanese creator assets.'],
+            ['name' => 'Image', 'slug' => 'image', 'description' => 'For illustrations, photography, and visual artwork.'],
+            ['name' => 'Video', 'slug' => 'video', 'description' => 'For motion graphics, loops, and video releases.'],
+            ['name' => 'Other', 'slug' => 'other', 'description' => 'For ZIP deliveries and mixed creator assets.'],
         ])->map(fn (array $genre) => Genre::query()->firstOrCreate(
             ['slug' => $genre['slug']],
             $genre,
@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
         $contents = [
             [
                 'title' => 'Neon Archive Pack',
-                'description' => 'An archive pack of Japanese night-scene visuals and thumbnail-ready assets.',
+                'description' => 'An archive pack of neon city visuals and thumbnail-ready assets.',
                 'price' => 4800,
                 'cover_path' => 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
                 'preview_paths' => [
